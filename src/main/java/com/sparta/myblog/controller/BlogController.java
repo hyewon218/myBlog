@@ -3,7 +3,6 @@ package com.sparta.myblog.controller;
 import com.sparta.myblog.dto.BlogDeleteResponseDto;
 import com.sparta.myblog.dto.BlogRequestDto;
 import com.sparta.myblog.dto.BlogResponseDto;
-import com.sparta.myblog.entity.Blog;
 import com.sparta.myblog.service.BlogService;
 import org.springframework.web.bind.annotation.*;
 
