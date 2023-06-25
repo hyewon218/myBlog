@@ -14,7 +14,7 @@ public class PostResponseDto {
     private  Boolean success;
     private Long id;
     private String title;
-    private String author;
+    private String username;
     private String contents;
     // 생성시간, 수정시간 추가
     private LocalDateTime createdAt;
@@ -25,7 +25,7 @@ public class PostResponseDto {
     public PostResponseDto(Post post) {
         this.id = post.getId();
         this.title = post.getTitle();
-        this.author = post.getAuthor();
+        this.username = post.getUsername();
         this.contents = post.getContents();
         this.createdAt = post.getCreatedAt();
         this.modifiedAt = post.getModifiedAt();

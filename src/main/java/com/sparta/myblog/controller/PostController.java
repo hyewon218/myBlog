@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 // Controller 의 역할 : 클라이언트의 요청을 받고 클라이언트의 요청을 Service 에 전달한다.
-// Controller : 외부 api 요청 수신하고 그것에 대한 응답값을 주는 layer paa됨kage
+// Controller : 외부 api 요청 수신하고 그것에 대한 응답값을 주는 layer
 @RestController
 @RequestMapping("/api") // 공통 경로 표시
 public class PostController {

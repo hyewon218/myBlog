@@ -82,7 +82,7 @@ public class PostService {
 
         // 비밀번호가 일치 했다면 필드 업데이트
         post.setTitle(postRequestDto.getTitle());
-        post.setAuthor(postRequestDto.getAuthor());
+        post.setAuthor(postRequestDto.getUsername());
         post.setContents(postRequestDto.getContents());
 
         // update 했으면 Dto 로 변환해서 응답해 줌

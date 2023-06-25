@@ -5,7 +5,6 @@ import com.sparta.myblog.dto.PostRequestDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity // JPA가 관리할 수 있는 Entity(실제 DB에 저장되어 있는 데이터를 가지고 있음) 클래스 지정
@@ -25,7 +24,7 @@ public class  Post extends BaseEntity {
     private String title;
 
     @Column(nullable = false)
-    private String author;
+    private String username;
 
     @Column(nullable = false, length = 500)
     private String contents;
@@ -37,7 +36,7 @@ public class  Post extends BaseEntity {
     public Post(PostRequestDto requestDto) {
         // id 는 @GeneratedValue 를 통해서 값을 자동으로 생성하도록 했기 때문에 id 는 필요 없다.
         this.title = requestDto.getTitle();
-        this.author = requestDto.getAuthor();
+        this.username = requestDto.getUsername();
         this.contents = requestDto.getContents();
         this.password = requestDto.getPassword();
     }
@@ -47,7 +46,7 @@ public class  Post extends BaseEntity {
         this.title = title;
     }
     public void setAuthor(String name) {
-        this.author = name;
+        this.username = name;
     }
     public void setContents(String content) {
         this.contents = content;
