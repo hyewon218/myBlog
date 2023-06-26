@@ -17,7 +17,7 @@ public class PostResponseDto {
     private String username;
     private String contents;
     // 생성시간, 수정시간 추가
-    private LocalDateTime createdAt;
+    private LocalDateTime createAt;
     private LocalDateTime modifiedAt;
 
     // 들어온 값으로 필드들을 조회해서 넣어주게 들
@@ -27,7 +27,7 @@ public class PostResponseDto {
         this.title = post.getTitle();
         this.username = post.getUsername();
         this.contents = post.getContents();
-        this.createdAt = post.getCreatedAt();
+        this.createAt = post.getCreateAt();
         this.modifiedAt = post.getModifiedAt();
     }
 
