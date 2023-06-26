@@ -32,7 +32,7 @@ public class PostController {
     // 2. 선택한 게시글 조회 (Get - 조회)
     // 선택한 게시글의  제목, 작성자명, 작성날짜, 작성내용을 조회하기
     // {경로변수} 로 id 값을 받아오면 그 id 값을 기준으로 단건을 조회
-    @GetMapping("/posts/{id}")
+    @GetMapping("/post/{id}")
     // Query Parameter 방법
     // posts?id=11&name=최혜원 - @RequestParam Long id 로 받을 수 있고 PostRequestDto postRequestDto 객체로도 받을 수 있다.
     // 그러려면 PostRequestDto 에는 생성자가 있어야 한다. @NoArgsConstructor - 생성자 역할
@@ -45,7 +45,8 @@ public class PostController {
     // 제목, 작성자명, 비밀번호, 작성 내용을 저장하고
     // 저장된 게시글을 Client 로 반환하기
     // @RequestBody : 요청값으로 넘어 온 JSON 객체를 PostRequestDto 객체로 변환해 주는 역할
-    @PostMapping("/posts")
+    // 토큰을 검사하여 유효한 토큰일 경우에만 작성
+    @PostMapping("/post")
     public PostResponseDto createPost(@RequestBody PostRequestDto requestDto) {
         // 응답값으로 생성된 객체의 정보를 return
         return postService.createPost(requestDto);
@@ -54,7 +55,7 @@ public class PostController {
     // 4. 선택한 게시글 수정 (Put- 수정)
     // 제목, 작성자명, 작성내용을 수정하고 수정된 게시글을 클라이언트로 반환하기
     // 경로변수를 받아오고 수정 내용이 생성할 때와 똑같이 body 에 담겨서 넘어옴 그 body 값을 기준으로 update
-    @PutMapping("/posts/{id}")
+    @PutMapping("/post/{id}")
     public PostResponseDto updatePost(@PathVariable Long id, @RequestBody PostRequestDto postRequestDto) {
         return postService.updatePost(id, postRequestDto);
     }
@@ -63,7 +64,7 @@ public class PostController {
     // 선택한 게시글을 삭제하고 클라이언트로 성공했다는 표시 반환하기
     // id 값을 지정을 해서 단건임을 명시
     // 요청 body에 포함되어 있는 값들을 BlogRequestDto 이 객체로 받아올 수 있도록 한다.
-    @DeleteMapping("/posts/{id}")
+    @DeleteMapping("/post/{id}")
     public PostResponseDto deletePost(@PathVariable Long id, @RequestBody PostRequestDto postRequestDto) {
         //return postService.deletePost(id, postRequestDto);
         // 삭제할 때 필요한 건 password -> PostRequestDto 에서 password 를 꺼내서 id 값이랑 같이 해서 deletePost 메서드 호출
