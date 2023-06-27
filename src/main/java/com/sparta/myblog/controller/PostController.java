@@ -2,6 +2,7 @@ package com.sparta.myblog.controller;
 
 import com.sparta.myblog.dto.PostRequestDto;
 import com.sparta.myblog.dto.PostResponseDto;
+import com.sparta.myblog.entity.User;
 import com.sparta.myblog.service.PostService;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,9 +48,9 @@ public class PostController {
     // @RequestBody : 요청값으로 넘어 온 JSON 객체를 PostRequestDto 객체로 변환해 주는 역할
     // 토큰을 검사하여 유효한 토큰일 경우에만 작성
     @PostMapping("/post")
-    public PostResponseDto createPost(@RequestBody PostRequestDto requestDto) {
+    public PostResponseDto createPost(@RequestBody PostRequestDto requestDto, User user) {
         // 응답값으로 생성된 객체의 정보를 return
-        return postService.createPost(requestDto);
+        return postService.createPost(requestDto, user);
     }
 
     // 4. 선택한 게시글 수정 (Put- 수정)

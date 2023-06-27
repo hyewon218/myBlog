@@ -3,6 +3,7 @@ package com.sparta.myblog.service;
 import com.sparta.myblog.dto.PostRequestDto;
 import com.sparta.myblog.dto.PostResponseDto;
 import com.sparta.myblog.entity.Post;
+import com.sparta.myblog.entity.User;
 import com.sparta.myblog.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,12 +51,12 @@ public class PostService {
                 .toList(); // Stream 을 List 로 다시 변환
     }
 
-    // 게시글 작성 API (생성 )
-    public PostResponseDto createPost(PostRequestDto requestDto) {
+    // 게시글 작성 API (생성)
+    public PostResponseDto createPost(PostRequestDto requestDto, User user) {
         // RequestDto -> Entity
         // Entity 클래스(Post) 에서 생성자를 호출해서 각각 필드를 채워준다.
         // Post 클래스 객체 하나가 데이터 베이스의 한줄, 한 row 이다.
-        Post post = new Post(requestDto);
+        Post post = new Post(requestDto, user);
         // DB 저장
         // post 한 줄 저장 후 Post 반환
         // Entity 객체 (post) 를 전달하면 객체는 저장 되어서 응답 값으로 Post가 반환된다.
@@ -74,27 +75,23 @@ public class PostService {
     }
 
     // 선택한 게시글 수정 API
-    @Transactional // Entity 객체가 변환된 것을 메소드가 끝날 때 (Transaction이 끝날 때) DB에 반영을 해 줌
+    @Transactional // Entity 객체가 변환된 것을 메소드가 끝날 때 (Transaction 이 끝날 때) DB에 반영을 해 줌
     public PostResponseDto updatePost(Long id, PostRequestDto postRequestDto) {
         Post post = findPost(id);
-        // 비밀번호 체크
-        post.checkPassword(postRequestDto.getPassword());
 
-        // 비밀번호가 일치 했다면 필드 업데이트
-        post.setTitle(postRequestDto.getTitle());
-        post.setAuthor(postRequestDto.getUsername());
-        post.setContents(postRequestDto.getContents());
-
+        post.update(postRequestDto);
         // update 했으면 Dto 로 변환해서 응답해 줌
         return new PostResponseDto(post);
+
+        // 비밀번호가 일치 했다면 필드 업데이트
+        //post.setTitle(postRequestDto.getTitle());
+        //post.setContents(postRequestDto.getContents());
     }
 
     // 선택한 게시글 삭제 API
     public void deletePost(Long id, String password) {
         Post post = findPost(id);
-        // 비밀번호 체크
-        post.checkPassword(password);
-        // 삭제 처리
+
         postRepository.delete(post);
     }
 
