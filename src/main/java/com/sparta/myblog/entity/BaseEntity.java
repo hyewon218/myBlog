@@ -19,7 +19,7 @@ public abstract class BaseEntity {
     @Column(updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     // 작성날짜
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     // BaseEntity 를 상속받는 Entity 객체가 @LastModifiedDate 를 읽어서 수정되었을 경우에 수정된 일시를 modifiedAt 필드에 저장한다.
     @LastModifiedDate
