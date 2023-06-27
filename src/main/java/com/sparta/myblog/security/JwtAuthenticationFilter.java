@@ -2,7 +2,6 @@ package com.sparta.myblog.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.myblog.dto.LoginRequestDto;
-import com.sparta.myblog.dto.LoginResponseDto;
 import com.sparta.myblog.entity.UserRoleEnum;
 import com.sparta.myblog.jwt.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -60,13 +59,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         // 역할 가지고 오는 이유? Token 생성할 때 역할을 두번째 파라미터에 넣어주기로 했었음
         String token = jwtUtil.createToken(username, role);
         response.addHeader(JwtUtil.AUTHORIZATION_HEADER, token);
-
     }
-
-    protected LoginResponseDto successLoginResponseDto (){
-        return new LoginResponseDto();
-    }
-
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
