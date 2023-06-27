@@ -19,44 +19,42 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 public class  Post extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) //auto_increment 값을 자동으로 생성
-    private Long id;
+    @Column(name = "post_id")
+    private Long postId;
 
     private String title;
-
-    @Column(nullable = false)
-    private String username;
 
     @Column(nullable = false, length = 500)
     private String contents;
 
-    @Column(nullable = false)
-    private String password;
+    // FetchType.LAZY 는 연관 관계로 걸린 엔티티가 참조 되어야 하는 시점에 읽는 방법.
+    // JPA N + 1 Problem 을 방지하기 위한 가장 기초적인 옵션 값.
+    @ManyToOne(fetch = FetchType.LAZY)
+    // 외래 키를 매핑할 때 사용하는 어노테이션, name = "매핑할 외래 키 컬럼명", referencedColumnName = 대상 테이블의 컬럼명
+    // 해당 어노테이션을 생략해도 연관 관계가 걸려 있을 경우, 자동으로 외래 키를 탐색함.
+    @JoinColumn(name = "username", referencedColumnName = "username")
+    private User user;
 
 
-    public Post(PostRequestDto requestDto) {
+    public Post(PostRequestDto requestDto, User user) {
         // id 는 @GeneratedValue 를 통해서 값을 자동으로 생성하도록 했기 때문에 id 는 필요 없다.
         this.title = requestDto.getTitle();
-        this.username = requestDto.getUsername();
         this.contents = requestDto.getContents();
-        this.password = requestDto.getPassword();
+        this.user = user;
+    }
+
+    public void update(PostRequestDto requestDto) {
+        this.title = requestDto.getTitle();
+        this.contents = requestDto.getContents();
     }
 
     // setter 메소드를 정의해 놓고 제한적으로 사용한다.
-    public void setTitle(String title) {
-        this.title = title;
-    }
-    public void setAuthor(String name) {
-        this.username = name;
-    }
-    public void setContents(String content) {
-        this.contents = content;
-    }
+    //public void setTitle(String title) {
+    //    this.title = title;
+    //}
+    //public void setContents(String content) {
+    //    this.contents = content;
+    //}
 
-    // Service 함수
-    // 비밀번호 체크하는 함수
-    public void checkPassword(String inputPassword) {
-        if (!password.equals(inputPassword)) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-        }
-    }
+
 }
