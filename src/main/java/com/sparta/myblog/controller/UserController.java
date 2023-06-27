@@ -7,6 +7,7 @@ import com.sparta.myblog.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -24,7 +25,7 @@ public class UserController {
 
     // 회원 가입
     @PostMapping("/auth/signup")
-    public SignupResponseDto signup(@Valid @RequestBody SignupRequestDto requestDto, BindingResult bindingResult) {
+    public ApiResult signup(@Valid @RequestBody SignupRequestDto requestDto, BindingResult bindingResult) {
         // Validation 예외처리
         List<FieldError> fieldErrors = bindingResult.getFieldErrors();
         if(fieldErrors.size() > 0) {
@@ -35,7 +36,7 @@ public class UserController {
         userService.signup(requestDto);
 
         // 성공했다는 메시지, 상태코드 와 함께 Client 에 반환하기
-        return new SignupResponseDto();
+        return new ApiResult("회원가입 성공", HttpStatus.OK.value());
     }
 
     // 회원 관련 정보 받기
