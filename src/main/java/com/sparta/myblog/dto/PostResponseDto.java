@@ -17,17 +17,17 @@ public class PostResponseDto {
     private String username;
     private String contents;
     // 생성시간, 수정시간 추가
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
     // 들어온 값으로 필드들을 조회해서 넣어주게 들
     // 게시글 조회, 생성, 수정에서 사용
     public PostResponseDto(Post post) {
-        this.id = post.getId();
+        this.id = post.getPostId();
         this.title = post.getTitle();
-        this.username = post.getUsername();
+        this.username = post.getUser().getUsername();
         this.contents = post.getContents();
-        this.createAt = post.getCreateAt();
+        this.createdAt = post.getCreatedAt();
         this.modifiedAt = post.getModifiedAt();
     }
 
