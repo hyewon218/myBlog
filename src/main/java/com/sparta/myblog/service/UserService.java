@@ -1,12 +1,14 @@
 package com.sparta.myblog.service;
 
+import com.sparta.myblog.dto.LoginRequestDto;
 import com.sparta.myblog.dto.SignupRequestDto;
 import com.sparta.myblog.entity.User;
-import com.sparta.myblog.entity.UserRoleEnum;
+import com.sparta.myblog.jwt.JwtUtil;
 import com.sparta.myblog.repository.UserRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -15,17 +17,13 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
-    // ADMIN_TOKEN : 일반 사용자인지 관리자인지 구분하기 위해
-    private final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
-
-    // 회원가입할 데이터를 requestDto 로 받아온다.
-    public void signup(SignupRequestDto requestDto) {
-        // requestDto 에서 username 뽑아오기
-        String username = requestDto.getUsername();
-        // 암호화 처리
-        String password = passwordEncoder.encode(requestDto.getPassword());
+    @Transactional
+    public void signup(SignupRequestDto signupRequestDto) {
+        String username = signupRequestDto.getUsername();
+        String password = signupRequestDto.getPassword();
+        String role = signupRequestDto.getRole();
 
         // 회원 중복 확인 -> 있을 때 error 처리
         // Optional : null 체크하기 위해 만들어진 타입
@@ -35,23 +33,30 @@ public class UserService {
             throw new IllegalArgumentException("중복된 사용자가 존재합니다.");
         }
 
-        // 사용자 ROLE 확인(권한 확인)
-        UserRoleEnum role = UserRoleEnum.USER;
-        // boolean 타입은 is 로 시작
-        // isAdmin 이 true 이면 -> 관리자 권한으로 회원가입 하겠다는 의미
-        if (requestDto.isAdmin()) {
-            if (!ADMIN_TOKEN.equals(requestDto.getAdminToken())) {
-                throw new IllegalArgumentException("관리자 암호가 틀려 등록이 불가능합니다.");
-            }
-            // ADMIN 권한으로 덮어씌우기
-            role = UserRoleEnum.ADMIN;
-        }
-
         // 사용자 등록
         // 데이터 베이스의 한 줄 즉, 한 row 는 해당하는 entity Class 에 하나의 객체다.
         User user = new User(username, password, role);
         // userRepository 에 의해 저장이 완료딤
         userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public void login(LoginRequestDto loginRequestDto, HttpServletResponse response) {
+        String username = loginRequestDto.getUsername();
+        String password = loginRequestDto.getPassword();
+
+        // 사용자 확인
+        User user = userRepository.findByUsername(username).orElseThrow(
+                () ->  new IllegalArgumentException("회원을 찾을 수 없습니다.")
+        );
+
+        // 비밀번호 확인
+        if (!user.getPassword().equals(password)) {
+            throw new IllegalArgumentException("비밀번호가 틀렸습니다.");
+        }
+
+        // JWT Token 생성 및 반환
+        response.addHeader(JwtUtil.AUTHORIZATION_HEADER, jwtUtil.createToken(user.getUsername()));
     }
 
 }
