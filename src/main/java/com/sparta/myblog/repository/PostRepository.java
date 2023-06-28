@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
     // 작성날짜 기준 내림차순
-    List<Post> findAllByOrderByCreateAtDesc();
+    List<Post> findAllByOrderByCreatedAtDesc();
 }

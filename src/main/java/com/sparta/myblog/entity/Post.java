@@ -3,6 +3,7 @@ package com.sparta.myblog.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.sparta.myblog.dto.PostRequestDto;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -25,7 +26,7 @@ public class  Post extends BaseEntity {
     private String title;
 
     @Column(nullable = false, length = 500)
-    private String contents;
+    private String content;
 
     // FetchType.LAZY 는 연관 관계로 걸린 엔티티가 참조 되어야 하는 시점에 읽는 방법.
     // JPA N + 1 Problem 을 방지하기 위한 가장 기초적인 옵션 값.
@@ -35,26 +36,16 @@ public class  Post extends BaseEntity {
     @JoinColumn(name = "username", referencedColumnName = "username")
     private User user;
 
-
+    @Builder
     public Post(PostRequestDto requestDto, User user) {
         // id 는 @GeneratedValue 를 통해서 값을 자동으로 생성하도록 했기 때문에 id 는 필요 없다.
         this.title = requestDto.getTitle();
-        this.contents = requestDto.getContents();
+        this.content= requestDto.getContent();
         this.user = user;
     }
 
     public void update(PostRequestDto requestDto) {
         this.title = requestDto.getTitle();
-        this.contents = requestDto.getContents();
+        this.content = requestDto.getContent();
     }
-
-    // setter 메소드를 정의해 놓고 제한적으로 사용한다.
-    //public void setTitle(String title) {
-    //    this.title = title;
-    //}
-    //public void setContents(String content) {
-    //    this.contents = content;
-    //}
-
-
 }
