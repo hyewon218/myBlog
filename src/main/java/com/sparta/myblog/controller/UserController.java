@@ -1,14 +1,12 @@
 package com.sparta.myblog.controller;
 
 import com.sparta.myblog.dto.*;
-import com.sparta.myblog.entity.UserRoleEnum;
-import com.sparta.myblog.security.UserDetailsImpl;
 import com.sparta.myblog.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -39,16 +37,12 @@ public class UserController {
         return new ApiResult("회원가입 성공", HttpStatus.OK.value());
     }
 
-    // 회원 관련 정보 받기
-    @GetMapping("/auth-info")
-    @ResponseBody
-    // principal  :  사용자 식별, Username/Password 방식으로 인증할 때 일반적으로 UserDetails 인스턴스
-    public UserInfoDto getUserInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        // Authentication 의 Principal 에 저장된 UserDetailsImpl 을 가져옵니다.
-        String username = userDetails.getUser().getUsername();
-        UserRoleEnum role = userDetails.getUser().getRole();
-        boolean isAdmin = (role == UserRoleEnum.ADMIN);
+    // 로그인
+    @PostMapping("/auth/login")
+    public ApiResult login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
 
-        return new UserInfoDto(username, isAdmin);
+        userService.login(loginRequestDto, response);
+
+        return new ApiResult("로그인 성공", HttpStatus.OK.value()); // 로그인 성공시 ApiResult Dto 를 사용하여 성공메세지와 statusCode를 띄움
     }
 }
