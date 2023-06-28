@@ -1,9 +1,11 @@
 package com.sparta.myblog.controller;
 
+import com.sparta.myblog.dto.ApiResult;
 import com.sparta.myblog.dto.PostRequestDto;
 import com.sparta.myblog.dto.PostResponseDto;
-import com.sparta.myblog.entity.User;
 import com.sparta.myblog.service.PostService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +23,7 @@ public class PostController {
         this.postService = postService;
     }
 
-    // 1. 전체 게시글 목록 조회 (Get - 조회)
+    // 1. 전체 게시글 목록 조회
     // 제목, 작성자명, 작성내용, 작성날짜를 조회하기
     // 작성날짜 기준 내림차순으로 정렬하기
     @GetMapping("/posts")
@@ -30,7 +32,7 @@ public class PostController {
         return postService.getPostListV2();
     }
 
-    // 2. 선택한 게시글 조회 (Get - 조회)
+    // 2. 선택한 게시글 조회
     // 선택한 게시글의  제목, 작성자명, 작성날짜, 작성내용을 조회하기
     // {경로변수} 로 id 값을 받아오면 그 id 값을 기준으로 단건을 조회
     @GetMapping("/post/{id}")
@@ -42,36 +44,31 @@ public class PostController {
         return postService.getPost(id);
     }
 
-    // 3. 게시글 작성 (Post - 생성)
-    // 제목, 작성자명, 비밀번호, 작성 내용을 저장하고
+    // 3. 게시글 작성
+    // 제목, 작성자명(username), 작성 내용을 저장하고
     // 저장된 게시글을 Client 로 반환하기
     // @RequestBody : 요청값으로 넘어 온 JSON 객체를 PostRequestDto 객체로 변환해 주는 역할
-    // 토큰을 검사하여 유효한 토큰일 경우에만 작성
     @PostMapping("/post")
-    public PostResponseDto createPost(@RequestBody PostRequestDto requestDto, User user) {
+    public PostResponseDto createPost(@RequestBody PostRequestDto requestDto, HttpServletRequest request) {
         // 응답값으로 생성된 객체의 정보를 return
-        return postService.createPost(requestDto, user);
+        return postService.createPost(requestDto, request);
     }
 
-    // 4. 선택한 게시글 수정 (Put- 수정)
-    // 제목, 작성자명, 작성내용을 수정하고 수정된 게시글을 클라이언트로 반환하기
+    // 4. 선택한 게시글 수정
+    // 제목, 작성 내용을 수정하고 수정된 게시글을 Client 로 반환하기
     // 경로변수를 받아오고 수정 내용이 생성할 때와 똑같이 body 에 담겨서 넘어옴 그 body 값을 기준으로 update
     @PutMapping("/post/{id}")
-    public PostResponseDto updatePost(@PathVariable Long id, @RequestBody PostRequestDto postRequestDto) {
-        return postService.updatePost(id, postRequestDto);
+    public PostResponseDto updatePost(@PathVariable Long id, @RequestBody PostRequestDto postRequestDto, HttpServletRequest request) {
+        return postService.updatePost(id, postRequestDto, request);
     }
 
     // 선택한 게시글 삭제
-    // 선택한 게시글을 삭제하고 클라이언트로 성공했다는 표시 반환하기
     // id 값을 지정을 해서 단건임을 명시
-    // 요청 body에 포함되어 있는 값들을 BlogRequestDto 이 객체로 받아올 수 있도록 한다.
+    // 선택한 게시글을 삭제하고 Client 로 성공했다는 메시지, 상태코드 반환하기
     @DeleteMapping("/post/{id}")
-    public PostResponseDto deletePost(@PathVariable Long id, @RequestBody PostRequestDto postRequestDto) {
-        //return postService.deletePost(id, postRequestDto);
-        // 삭제할 때 필요한 건 password -> PostRequestDto 에서 password 를 꺼내서 id 값이랑 같이 해서 deletePost 메서드 호출
-        postService.deletePost(id, postRequestDto.getPassword());
-        // success 값만 받아서 PostResponseDto 로 변환 해 응답
-        return new PostResponseDto(true);
+    public ApiResult deletePost(@PathVariable Long id, HttpServletRequest request) {
+        postService.deletePost(id, request);
+        return new ApiResult("게시글 삭제 성공", HttpStatus.OK.value()); // 게시글 삭제 성공시 ApiResult Dto를 사용하여 성공메세지와 statusCode를 띄움
     }
 }
 
