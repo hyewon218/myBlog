@@ -17,6 +17,8 @@ public class SignupRequestDto {
     @Size(min = 8, max = 12, message = "비밀번호는 8자 이상 15자 이하여야 합니다.")
     @Pattern(regexp = "^(?=.*[a-zA-Z])((?=.*\\d)|(?=.*\\W)).{8,15}+$", message = "비밀번호는 영어 대소문자, 숫자, 특수문자로 구성되어야 합니다.")
     private String password;
-    private boolean admin = false;
-    private String adminToken = "";
+    @NotBlank
+    @Pattern(regexp = "ADMIN|USER", message = "권한은 ADMIN 혹은 USER만 입력 가능합니다.")
+    // 회원의 권한 부여하기 (ADMIN or USER)
+    private String role;
 }
