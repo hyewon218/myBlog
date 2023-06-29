@@ -1,15 +1,13 @@
 package com.sparta.myblog.service;
 
-import com.sparta.myblog.dto.ApiResult;
+import com.sparta.myblog.dto.ApiResponseDto;
 import com.sparta.myblog.dto.CommentRequestDto;
 import com.sparta.myblog.dto.CommentResponseDto;
 import com.sparta.myblog.entity.Comment;
 import com.sparta.myblog.entity.Post;
 import com.sparta.myblog.entity.User;
-import com.sparta.myblog.jwt.JwtUtil;
 import com.sparta.myblog.repository.CommentRepository;
 import com.sparta.myblog.repository.PostRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,15 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
-    private final JwtUtil jwtUtil;
 
     // 댓글 작성
     @Transactional
-    public CommentResponseDto createComment(CommentRequestDto commentRequestDto, HttpServletRequest request) {
-        // 토큰을 검사하여, 유효한 토큰일 경우에만 댓글 작성 가능
-        // 토큰 검증
-        User user = jwtUtil.checkToken(request);
-
+    public CommentResponseDto createComment(CommentRequestDto commentRequestDto, User user) {
         // 선택한 게시글의 DB 저장 유무를 확인하기
         Post post = postRepository.findById(commentRequestDto.getPostId()).orElseThrow(
                 () -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다.")
@@ -53,10 +46,7 @@ public class CommentService {
 
     // 댓글 수정
     @Transactional
-    public CommentResponseDto updateComment(Long commentId, CommentRequestDto commentRequestDto, HttpServletRequest request) {
-        // 토큰을 검사한 후, 유효한 토큰이면서 해당 사용자가 작성한 댓글만 수정 가능
-        User user = jwtUtil.checkToken(request);
-
+    public CommentResponseDto updateComment(Long commentId, CommentRequestDto commentRequestDto, User user) {
         // 선택한 댓글의 DB 저장 유무를 확인하기
         Comment comment = findComment(commentId);
 
@@ -78,10 +68,7 @@ public class CommentService {
 
     // 댓글 삭제
     @Transactional
-    public ApiResult deleteComment(Long commentId, HttpServletRequest request) {
-        // 토큰을 검사한 후, 유효한 토큰이면서 해당 사용자가 작성한 댓글만 삭제 가능
-        User user = jwtUtil.checkToken(request);
-
+    public ApiResponseDto deleteComment(Long commentId, User user) {
         // 선택한 댓글의 DB 저장 유무를 확인하기
         Comment comment = findComment(commentId);
 
@@ -91,7 +78,7 @@ public class CommentService {
         // 선택한 댓글이 있다면 댓글 삭제하고 Client 로 성공했다는 메시지, 상태코드 반환하기
         commentRepository.delete(comment);
 
-        return ApiResult.builder()
+        return ApiResponseDto.builder()
                 .msg("댓글 삭제 성공")
                 .statusCode(HttpStatus.OK.value())
                 .build();

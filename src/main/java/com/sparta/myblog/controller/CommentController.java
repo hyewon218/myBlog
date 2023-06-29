@@ -1,11 +1,12 @@
 package com.sparta.myblog.controller;
 
-import com.sparta.myblog.dto.ApiResult;
+import com.sparta.myblog.dto.ApiResponseDto;
 import com.sparta.myblog.dto.CommentRequestDto;
 import com.sparta.myblog.dto.CommentResponseDto;
+import com.sparta.myblog.security.UserDetailsImpl;
 import com.sparta.myblog.service.CommentService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,19 +18,19 @@ public class CommentController {
 
     // 댓글 작성
     @PostMapping("/comment")
-    public CommentResponseDto createComment(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
-        return commentService.createComment(commentRequestDto, request);
+    public CommentResponseDto createComment(@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody CommentRequestDto commentRequestDto) {
+        return commentService.createComment(commentRequestDto, userDetails.getUser());
     }
 
     // 댓글 수정
     @PutMapping("/comment/{id}")
-    public CommentResponseDto updateComment(@PathVariable Long id, @RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
-        return commentService.updateComment(id, commentRequestDto, request);
+    public CommentResponseDto updateComment(@AuthenticationPrincipal UserDetailsImpl userDetails, @PathVariable Long id, @RequestBody CommentRequestDto commentRequestDto) {
+        return commentService.updateComment(id, commentRequestDto, userDetails.getUser());
     }
 
     // 댓글 삭제
     @DeleteMapping("/comment/{id}")
-    public ApiResult deleteComment(@PathVariable Long id, HttpServletRequest request) {
-        return commentService.deleteComment(id, request);
+    public ApiResponseDto deleteComment(@AuthenticationPrincipal UserDetailsImpl userDetails, @PathVariable Long id) {
+        return commentService.deleteComment(id, userDetails.getUser());
     }
 }
