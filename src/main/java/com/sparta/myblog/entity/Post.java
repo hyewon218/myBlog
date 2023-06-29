@@ -1,5 +1,6 @@
 package com.sparta.myblog.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.sparta.myblog.dto.PostRequestDto;
 import jakarta.persistence.*;
@@ -7,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.util.List;
 
 @Entity // JPA가 관리할 수 있는 Entity(실제 DB에 저장되어 있는 데이터를 가지고 있음) 클래스 지정
 //@Setter : Entity 데이터는 DB와 직결되는 데이터이기 때문에 @Setter 로는 잘 쓰지 않는다.
@@ -35,6 +38,12 @@ public class  Post extends BaseEntity {
     // 해당 어노테이션을 생략해도 연관 관계가 걸려 있을 경우, 자동으로 외래 키를 탐색함.
     @JoinColumn(name = "username", referencedColumnName = "username")
     private User user;
+
+    @JsonIgnore
+    // 부모 엔티티가 자식의 생명주기를 모두 관리할 수 있게 됨.
+    // 다대일양방향
+    @OneToMany(mappedBy = "post",  cascade = CascadeType.ALL, orphanRemoval = true)// 게시글이 삭제되면 그 게시글에 있는 댓글들 모두 삭제가 되도록
+    private List<Comment> commentList;
 
     @Builder
     public Post(PostRequestDto requestDto, User user) {

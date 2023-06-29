@@ -1,8 +1,7 @@
 package com.sparta.myblog.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
@@ -18,7 +17,7 @@ public class Comment extends BaseEntity {
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", referencedColumnName = "post_id")
+    @JoinColumn(name = "post_id", insertable = false, updatable = false)
     private Post post;
 
     @ManyToOne(fetch = FetchType.LAZY)
