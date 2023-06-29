@@ -6,27 +6,35 @@ import com.sparta.myblog.dto.CommentResponseDto;
 import com.sparta.myblog.entity.Comment;
 import com.sparta.myblog.entity.Post;
 import com.sparta.myblog.entity.User;
-import com.sparta.myblog.entity.UserRoleEnum;
+import com.sparta.myblog.jwt.JwtUtil;
 import com.sparta.myblog.repository.CommentRepository;
 import com.sparta.myblog.repository.PostRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class CommentService {
-    CommentRepository commentRepository;
-    PostRepository postRepository;
+    private final CommentRepository commentRepository;
+    private final PostRepository postRepository;
+    private final JwtUtil jwtUtil;
 
     // 댓글 작성
     @Transactional
-    public CommentResponseDto createComment(CommentRequestDto commentRequestDto, User user) {
+    public CommentResponseDto createComment(CommentRequestDto commentRequestDto, HttpServletRequest request) {
+        // 토큰을 검사하여, 유효한 토큰일 경우에만 댓글 작성 가능
+        // 토큰 검증
+        User user = jwtUtil.checkToken(request);
 
-        // 댓글을 작성할 게시글이 있는지 확인
+        // 선택한 게시글의 DB 저장 유무를 확인하기
         Post post = postRepository.findById(commentRequestDto.getPostId()).orElseThrow(
                 () -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다.")
         );
 
+        // 선택한 게시글이 있다면 댓글을 등록하고 등록된 댓글 반환하기
         // 댓글 저장
         Comment comment = new Comment();
         comment.setContent(commentRequestDto.getContent());
@@ -45,15 +53,18 @@ public class CommentService {
 
     // 댓글 수정
     @Transactional
-    public CommentResponseDto updateComment(Long commentId, CommentRequestDto commentRequestDto, User user) {
+    public CommentResponseDto updateComment(Long commentId, CommentRequestDto commentRequestDto, HttpServletRequest request) {
+        // 토큰을 검사한 후, 유효한 토큰이면서 해당 사용자가 작성한 댓글만 수정 가능
+        User user = jwtUtil.checkToken(request);
 
-        // 수정하려는 댓글이 존재하는지 확인
+        // 선택한 댓글의 DB 저장 유무를 확인하기
         Comment comment = findComment(commentId);
 
-        if (this.checkValidUser(user, comment)) {
+        if (!user.getUsername().equals(comment.getUser().getUsername())) {
             throw new IllegalArgumentException("작성자만 수정/삭제할 수 있습니다.");
         }
 
+        // 선택한 댓글이 있다면 댓글 수정하고 수정된 댓글 반환하기
         comment.setContent(commentRequestDto.getContent());
         commentRepository.save(comment);
 
@@ -67,14 +78,17 @@ public class CommentService {
 
     // 댓글 삭제
     @Transactional
-    public ApiResult deleteComment(Long commentId, User user) {
+    public ApiResult deleteComment(Long commentId, HttpServletRequest request) {
+        // 토큰을 검사한 후, 유효한 토큰이면서 해당 사용자가 작성한 댓글만 삭제 가능
+        User user = jwtUtil.checkToken(request);
 
-        // 삭제하려는 댓글이 존재하는지 확인
+        // 선택한 댓글의 DB 저장 유무를 확인하기
         Comment comment = findComment(commentId);
 
-        if (this.checkValidUser(user, comment)) {
+        if (!user.getUsername().equals(comment.getUser().getUsername())) {
             throw new IllegalArgumentException("작성자만 수정/삭제할 수 있습니다.");
         }
+        // 선택한 댓글이 있다면 댓글 삭제하고 Client 로 성공했다는 메시지, 상태코드 반환하기
         commentRepository.delete(comment);
 
         return ApiResult.builder()
@@ -83,19 +97,11 @@ public class CommentService {
                 .build();
     }
 
-
     // 해당 댓글이 DB에 존재하는지 확인
     private Comment findComment(Long id) {
         // commnetRepository 에서 DB 를 통해 조회를 해온다.
-        // commentRepository.findById(id) : JPA 기본 제공 메서드라 Optional 이라는 응답값으로 오게 됨 -> Optional 은 값이 없을 경우에도 처리를 해야 함
-        return commentRepository.findById(id).orElseThrow(() ->  // orElseThrow 값이 없을 경우 어떤 예외를 던질지
+        return commentRepository.findById(id).orElseThrow(() ->
                 new IllegalArgumentException("해당 댓글이 존재하지 않습니다.")
         );
-    }
-
-    // 수정하려고 하는 댓글의 작성자가 본인인지, 관리자 계정으로 수정하려고 하는지 확인
-    private boolean checkValidUser(User user, Comment comment) {
-        return !(user.getUsername().equals(comment.getUser().getUsername())
-                && user.getRole().equals(UserRoleEnum.ADMIN));
     }
 }
