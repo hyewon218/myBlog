@@ -1,15 +1,15 @@
 package com.sparta.myblog.entity;
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @Table(name = "user")
+@EqualsAndHashCode
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,12 +21,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "role", nullable = false)
-    private String role;
-
-    public User(String username, String password, String role) {
+    public User(String username, String password) {
         this.username = username;
         this.password = password;
-        this.role = role;
     }
 }

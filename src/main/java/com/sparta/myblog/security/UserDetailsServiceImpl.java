@@ -25,6 +25,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Not Found " + username));
 
-        return new UserDetailsImpl(user);
+        // 조회된 회원 정보(user) 를 UserDetails 로 변환
+        return new UserDetailsImpl(user); // 그 정보를 UserDetailsImpl 생성자로 보내서 UserDetailsImpl 을 반환
     }
 }
