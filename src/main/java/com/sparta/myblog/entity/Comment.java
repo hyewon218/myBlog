@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Getter
-@Setter
 @Entity
 @Table(name = "comment")
 public class Comment extends BaseEntity {
@@ -23,4 +22,14 @@ public class Comment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "username", referencedColumnName = "username")
     private User user;
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+    public void setPost(Post post) {
+        this.post = post;
+    }
+    public void setUser(User user) {
+        this.user = user;
+    }
 }
