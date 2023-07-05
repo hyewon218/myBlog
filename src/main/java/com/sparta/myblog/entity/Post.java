@@ -28,7 +28,7 @@ public class  Post extends BaseEntity {
     @Column(nullable = false, length = 500)
     private String content;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "username", referencedColumnName = "username")
     private User user;
 
