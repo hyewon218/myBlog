@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<!--
+	Prologue by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>프로필 수정</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="/css/update_profile.css" />
+	</head>
+	<body class="is-preload">
+	<!-- Header -->
+	<header id="header">
+		<h1><a href="index.html">Netflix news feed</a></h1>
+		<nav class="main">
+			<nav class="links">
+				<ul>
+					<li><a href="#">profile</a></li>
+					<li><a href="#">Log out</a></li>
+				</ul>
+			</nav>
+		</nav>
+	</header>
+		<!-- Main -->
+			<div id="main">
+				<!-- Contact -->
+					<section id="contact" class="four">
+						<div class="container">
+							<header>
+								<h2 >나의 프로필</h2>
+								<div></div>
+							</header>
+							<form method="post" action="#">
+								<div class="row">
+									<div class="image"  ><img src="/images/profile2.png" alt="" /></div><input type="hidden" id="id" th:value="${user.id}" />
+									<div class="name"><h6>이름</h6></div>
+									<div class="col-6 col-12-mobile" ><input type="text" id="username" name="username" th:value="${user.username}" /></div>
+									<div class="off-12"></div>
+									<div class="off-13"></div><div><h6>Email</h6></div>
+									<div class="col-66 col-12-mobile"><input type="text" id="email" name="email" th:value="${user.email}"  /></div>
+
+									<div class="off-12"></div>
+									<div  class="col-13"><h6>나의 소개</h6></div>
+									<div class="col-12">
+										<textarea id="self_text" name="self_text" th:text="${user.self_text}"></textarea>
+									</div>
+									<div class="aln-left">
+                                        <!--비밀번호 변경 창으로 이동-->
+										<button type="button" class="button" id="btn-pwd-update" >비밀번호 변경하기</button>
+									</div>
+									<div class="off-7">
+										<!--<input type="submit" value="수정하기" />-->
+										<button type="button" class="button" id="btn-update">수정하기</button>
+									</div>
+								</div>
+							</form>
+
+						</div>
+					</section>
+
+			</div>
+
+
+		<!-- Scripts -->
+			<script src="/js/jquery.min.js"></script>
+			<script src="/js/jquery.scrolly.min.js"></script>
+			<script src="/js/jquery.scrollex.min.js"></script>
+			<script src="/js/browser.min.js"></script>
+			<script src="/js/breakpoints.min.js"></script>
+			<script src="/js/util.js"></script>
+			<script src="/js/update_profile.js"></script>
+
+	</body>
+</html>
