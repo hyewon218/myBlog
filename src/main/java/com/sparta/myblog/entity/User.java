@@ -18,11 +18,24 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(nullable = false, unique = true)
+    private String email;
+
     @Column(nullable = false)
     private String password;
 
-    public User(String username, String password) {
+    @Column(nullable = false)
+    @Enumerated(value = EnumType.STRING)
+    private UserRoleEnum role;
+
+    // 사용자의 자기소개
+    @Column
+    private String selfText;
+
+    public User(String username, String password, String email, UserRoleEnum role) {
         this.username = username;
         this.password = password;
+        this.role = role;
+        this.email = email;
     }
 }

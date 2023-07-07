@@ -3,6 +3,7 @@ package com.sparta.myblog.service;
 import com.sparta.myblog.dto.LoginRequestDto;
 import com.sparta.myblog.dto.SignupRequestDto;
 import com.sparta.myblog.entity.User;
+import com.sparta.myblog.entity.UserRoleEnum;
 import com.sparta.myblog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,23 +19,36 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // ADMIN_TOKEN
+    private final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
+
     @Transactional
     public void signup(SignupRequestDto requestDto) {
         String username = requestDto.getUsername();
         String password = passwordEncoder.encode(requestDto.getPassword());
 
-        // 회원 중복 확인 -> 있을 때 error 처리
-        // Optional : null 체크하기 위해 만들어진 타입
-        Optional<User> checkUsername = userRepository.findByUsername(username);
-        // isPresent() : Optional 내부에 존재하는 메서드, Optional 에 넣어준 값이 존재하는지 존재하지 않는지 확인해주는 메서드
         if (userRepository.findByUsername(username).isPresent()) {
             throw new IllegalArgumentException("이미 존재하는 회원입니다.");
         }
 
+        // email 중복확인
+        String email = requestDto.getEmail();
+        Optional<User> checkEmail = userRepository.findByEmail(email);
+        if (checkEmail.isPresent()) {
+            throw new IllegalArgumentException("중복된 Email 입니다.");
+        }
+
+        // 사용자 ROLE 확인
+        UserRoleEnum role = UserRoleEnum.USER;
+        if (requestDto.isAdmin()) { // 관리자일 때
+            if (!ADMIN_TOKEN.equals(requestDto.getAdminToken())) {
+                throw new IllegalArgumentException("관리자 암호가 틀려 등록이 불가능합니다.");
+            }
+            role = UserRoleEnum.ADMIN;
+        }
+
         // 사용자 등록
-        // 데이터 베이스의 한 줄 즉, 한 row 는 해당하는 entity Class 에 하나의 객체다.
-        User user = new User(username, password);
-        // userRepository 에 의해 저장이 완료딤
+        User user = new User(username, password, email, role);
         userRepository.save(user);
     }
 

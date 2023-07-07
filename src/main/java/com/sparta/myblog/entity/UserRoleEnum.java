@@ -2,9 +2,7 @@ package com.sparta.myblog.entity;
 
 public enum UserRoleEnum {
 
-
     USER(Authority.USER),
-
     ADMIN(Authority.ADMIN);
 
     private final String authority;
