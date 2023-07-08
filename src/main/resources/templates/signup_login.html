@@ -1,6 +1,5 @@
 <!DOCTYPE HTML>
 <html lang="ko" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
-
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport"
@@ -33,9 +32,9 @@
                     </div>
                 </div>
                 <span>or use your email for registration</span>
-                <input type="text" placeholder="Name">
-                <input type="email" placeholder="Email">
-                <input type="password" placeholder="Password">
+                <input type="text" name="username" placeholder="Name">
+                <input type="email" name="email" placeholder="Email">
+                <input type="password" name="password" placeholder="Password">
                 <button class="form_btn">회원가입</button>
             </form>
         </div>
@@ -54,8 +53,8 @@
                     </div>
                 </div>
                 <span>or use your account</span>
-                <input type="email" placeholder="Email">
-                <input type="password" placeholder="Password">
+                <input type="username" name="username" id="username" placeholder="Username">
+                <input type="password" name="password" id="password" placeholder="Password">
                 <button class="form_btn" onclick="onLogin()">로그인</button>
             </form>
         </div>
@@ -110,6 +109,7 @@
                 });
 
                 window.location.href = host;
+                alert("로그인 완료");
             })
             .fail(function (jqXHR, textStatus) {
                 alert("Login Fail");
