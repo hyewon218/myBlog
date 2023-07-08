@@ -34,14 +34,9 @@ public class CommentService {
         comment.setUser(user);
         comment.setPost(post);
 
-        commentRepository.save(comment);
+        var savedComment = commentRepository.save(comment);
 
-        return CommentResponseDto.builder()
-                .postId(post.getPostId())
-                .commentId(comment.getCommentId())
-                .content(comment.getContent())
-                .username(user.getUsername())
-                .build();
+        return new CommentResponseDto(savedComment);
     }
 
     // 댓글 수정
@@ -56,14 +51,8 @@ public class CommentService {
 
         // 선택한 댓글이 있다면 댓글 수정하고 수정된 댓글 반환하기
         comment.setContent(commentRequestDto.getContent());
-        commentRepository.save(comment);
 
-        return CommentResponseDto.builder()
-                .postId(comment.getPost().getPostId())
-                .commentId(comment.getCommentId())
-                .username(comment.getUser().getUsername())
-                .content(comment.getContent())
-                .build();
+        return new CommentResponseDto(comment);
     }
 
     // 댓글 삭제

@@ -12,20 +12,11 @@ public class CommentResponseDto {
     private String content;
     private String username;
 
-    @Builder
-    public CommentResponseDto(long commentId, long postId, String content, String username) {
-        this.commentId = commentId;
-        this.postId = postId;
-        this.content = content;
-        this.username = username;
-    }
-
     // Entity -> Dto
     public CommentResponseDto(Comment comment) {
         this.commentId = comment.getCommentId();
         this.postId = comment.getPost().getPostId();
         this.content = comment.getContent();
         this.username = comment.getUser().getUsername();
-
     }
 }
