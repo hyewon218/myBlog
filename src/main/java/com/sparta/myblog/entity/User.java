@@ -38,4 +38,13 @@ public class User {
         this.role = role;
         this.email = email;
     }
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    public void setSelfText(String selfText) {
+        this.selfText = selfText;
+    }
 }

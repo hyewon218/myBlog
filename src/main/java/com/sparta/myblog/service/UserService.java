@@ -2,6 +2,8 @@ package com.sparta.myblog.service;
 
 import com.sparta.myblog.dto.LoginRequestDto;
 import com.sparta.myblog.dto.SignupRequestDto;
+import com.sparta.myblog.dto.UserProfileRequestDto;
+import com.sparta.myblog.dto.UserProfileResponseDto;
 import com.sparta.myblog.entity.User;
 import com.sparta.myblog.entity.UserRoleEnum;
 import com.sparta.myblog.repository.UserRepository;
@@ -52,7 +54,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void login(LoginRequestDto requestDto) {
+/*    public void login.html(LoginRequestDto requestDto) {
         String username = requestDto.getUsername();
         String password = requestDto.getPassword();
 
@@ -65,6 +67,27 @@ public class UserService {
         if(!passwordEncoder.matches(password, user.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
+    }*/
+
+    public UserProfileResponseDto getUserProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("해당 Id를 찾을 수 없습니다. : " + userId));
+        return new UserProfileResponseDto(user);
     }
 
+    public UserProfileResponseDto updateUserProfile(Long userId, UserProfileRequestDto requestDto) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            // 사용자 정보 업데이트
+            user.setUsername(requestDto.getUsername());
+            user.setEmail(requestDto.getEmail());
+            user.setSelfText(requestDto.getSelf_text());
+            // TODO: 필요한 다른 정보 업데이트 작업 수행
+
+            User updatedUser = userRepository.save(user);
+            return new UserProfileResponseDto(updatedUser);
+        }
+        return null;
+    }
 }
