@@ -7,6 +7,7 @@ import com.sparta.myblog.dto.UserProfileRequestDto;
 import com.sparta.myblog.entity.UserRoleEnum;
 import com.sparta.myblog.security.UserDetailsImpl;
 import com.sparta.myblog.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,8 +50,14 @@ public class UserController {
         }
 
         userService.signup(requestDto);
-        log.info("회원가입이 완료되었습니다.");
         return "redirect:/api/user/login-page";
+    }
+
+    @GetMapping("/user/logout")
+    public String logout(HttpSession session) {
+        session.removeAttribute("user");
+
+        return "redirect:/";
     }
 
     // 회원 관련 정보 받기
@@ -88,9 +95,9 @@ public class UserController {
         return ResponseEntity.status(201).body(new ApiResponseDto("회원가입 성공", HttpStatus.CREATED.value()));
     }
     // 로그인 (postsman 으로 실행 - JwtAuthenticationFilter 필요 X)
-    @PostMapping("/login.html")
-    public ResponseEntity<ApiResponseDto> login.html(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
-        userService.login.html(loginRequestDto);
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponseDto> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
+        userService.login(loginRequestDto);
         //JWT 생성 및 쿠키에 저장 후 Response 객체에 추가
         response.addHeader(JwtUtil.AUTHORIZATION_HEADER, jwtUtil.createToken(loginRequestDto.getUsername(), loginRequestDto.getRole()));
         return ResponseEntity.ok().body(new ApiResponseDto("로그인 성공", HttpStatus.CREATED.value()));
