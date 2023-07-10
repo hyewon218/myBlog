@@ -6,7 +6,7 @@
 		  content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<link rel="preconnect" href="https://fonts.gstatic.com">
-    <link rel="stylesheet" href="/css/signup_login.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/signup_login.css" />
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"
             integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
@@ -53,9 +53,10 @@
                     </div>
                 </div>
                 <span>or use your account</span>
-                <input type="username" name="username" id="username" placeholder="Username">
+                <input type="text" name="username" id="username" placeholder="Username">
                 <input type="password" name="password" id="password" placeholder="Password">
-                <button class="form_btn" onclick="onLogin()">로그인</button>
+                <!--onclick 안 먹는 문제 : return false; 추가-->
+                <button class="form_btn" onclick="onLogin();return false;">로그인</button>
             </form>
         </div>
         <div class="overlay-container">
