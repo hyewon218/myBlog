@@ -7,7 +7,6 @@ import com.sparta.myblog.dto.UserProfileRequestDto;
 import com.sparta.myblog.entity.UserRoleEnum;
 import com.sparta.myblog.security.UserDetailsImpl;
 import com.sparta.myblog.service.UserService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,13 +52,6 @@ public class UserController {
         return "redirect:/api/user/login-page";
     }
 
-    @GetMapping("/user/logout")
-    public String logout(HttpSession session) {
-        session.removeAttribute("user");
-
-        return "redirect:/";
-    }
-
     // 회원 관련 정보 받기
     @GetMapping("/user-info")
     @ResponseBody
@@ -73,19 +65,45 @@ public class UserController {
     }
 
     // 프로필 조회
-    @GetMapping("/{userId}/profile")
-    public String getProfile(@PathVariable Long userId, Model model) {
-        UserProfileResponseDto dto = userService.getUserProfile(userId);
-        model.addAttribute("user", dto);
+    //@PreAuthorize("isAuthenticated()")
+    @GetMapping("/profile")
+    public String profile(@AuthenticationPrincipal UserDetailsImpl userDetails, Model model) {
+        log.info("프로필 창으로 이동");
+        log.info("유저아이디: "+userDetails.getUser().getId());
+        Long userId=userDetails.getUser().getId();
+        UserProfileResponseDto dto = userService.getUserProfile(userId); // 뷰에 보여줄 데이터
+        model.addAttribute("user", dto); // user 라는 이름애 db에 저장된 데이터 뿌려주기
 
         return "update_profile";
     }
 
     // 프로필 수정
-    @PutMapping("/{userId}/profile")
-    public UserProfileResponseDto update(@PathVariable Long userId, @RequestBody UserProfileRequestDto requestDto) {
-        return userService.updateUserProfile(userId, requestDto);
+    //@PreAuthorize("isAuthenticated()")
+    @PutMapping("/update_profile")
+    public String modifyProfile(@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody UserProfileRequestDto requestDto, Model model) {
+        log.info("/modify-profile");
+        Long userId=userDetails.getUser().getId(); // 사용자 id
+        // UserProfileRequestDto - 클라이언트가 수정한 데이터
+        UserProfileResponseDto dto = userService.updateUserProfile(userId, requestDto);
+        model.addAttribute("board", dto); // 수정한 데이터 화면에 뿌려주기
+
+        log.info(dto.getUsername());
+        log.info(dto.getEmail());
+        log.info(dto.getSelf_text());
+        log.info("프로필 수정 완료");
+        //return null;
+        return "redirect://update_profile"; // 수정 후 조회 화면에서 데이터 보여주기
     }
+
+    //프로필 사진 가져오기
+/*    @GetMapping(value="/getAttachList", produces= MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @ResponseBody
+    public ResponseEntity<List<BoardAttachVO>>getAttachList(String userid){
+        log.info("getAttachList: "+userid);
+        log.info(service.getAttachList(userid));
+
+        return new ResponseEntity<>(service.getAttachList(userid), HttpStatus.OK);
+    }*/
 }
 
 /*    // 회원가입 (postman 으로 실행)
