@@ -38,6 +38,9 @@ public class  Post extends BaseEntity {
     @OneToMany(mappedBy = "post",  cascade = CascadeType.ALL, orphanRemoval = true)// 게시글이 삭제되면 그 게시글에 있는 댓글들 모두 삭제가 되도록
     private List<Comment> commentList;
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
+    private List<PostLike> postLikes;
+
     @Builder
     public Post(PostRequestDto requestDto) {
         this.title = requestDto.getTitle();

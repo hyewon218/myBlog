@@ -14,7 +14,7 @@ public class PostResponseDto {
     private Long id;
     private String title;
     private String content;
-    // 생성시간, 수정시간 추가
+    private Integer likeCount;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
     private List<CommentResponseDto> commentList;
@@ -26,6 +26,7 @@ public class PostResponseDto {
         this.id = post.getPostId();
         this.title = post.getTitle();
         this.content = post.getContent();
+        this.likeCount = post.getPostLikes().size();
         this.createdAt = post.getCreatedAt();
         this.modifiedAt = post.getModifiedAt();
         this.username = post.getUser().getUsername();

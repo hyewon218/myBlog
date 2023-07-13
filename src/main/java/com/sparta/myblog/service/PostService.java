@@ -4,13 +4,17 @@ import com.sparta.myblog.dto.PostListResponseDto;
 import com.sparta.myblog.dto.PostRequestDto;
 import com.sparta.myblog.dto.PostResponseDto;
 import com.sparta.myblog.entity.Post;
+import com.sparta.myblog.entity.PostLike;
 import com.sparta.myblog.entity.User;
+import com.sparta.myblog.repository.PostLikeRepository;
 import com.sparta.myblog.repository.PostRepository;
+import com.sun.jdi.request.DuplicateRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.stream.Collectors;
 
@@ -18,32 +22,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
-
-    // 전체 게시글 조회 API
-/*    public List<PostResponseDto> getPostListV1() {
-        // 방법1. 리스트 반복하며 넣어주기
-        List<Post> postList = postRepository.findAllByOrderByCreatedAtDesc();
-        // Dto 로 반환하기 위해서 postResponseDtoList 를 생성해 주고
-        List<PostResponseDto> postResponseDtoList = new ArrayList<>();
-        // postList 를 반복해 주면서
-        for (Post post : postList) {
-            // 생성자를 통해서 이 post 를 PostResponseDto 로 변환한 다음에 하나씩 add 를 해줘서 List 를 채워 응답하게 됨
-            postResponseDtoList.add(new PostResponseDto(post));
-        }
-        // 값을 넣어서 Dto 가 완성이 되면 Service 가 응답하게 됨
-        return postResponseDtoList;
-    }*/
-
-/*    public List<PostResponseDto> getPostListV2() {
-        // 방법2. Stream 형태로 변환해서 리스트로 바로 만들어주기
-        return postRepository.findAllByOrderByCreatedAtDesc().stream() // DB 에서 조회한 List 를 Stream 으로 변환
-                .map(PostResponseDto::new)  // Stream 처리를 통해 Post 를 PostResponseDto 로 변환 (PostResponseDto 생성자로 Post 객체가 들어간 메서드생성)
-                .toList(); // Stream 을 List 로 다시 변환
-    }*/
+    private final PostLikeRepository postLikeRepository;
 
     // 1. 전체 게시글 목록 조회
-    // 작성날짜 기준 내림차순으로 정렬하기
     public PostListResponseDto getPosts() {
+        // postRepository 결과로 넘어온 Post 의 stream 을 map 을 통해 PostResponseDto 로 변환 -> List 로 변환
         List<PostResponseDto> postList = postRepository.findAllByOrderByCreatedAtDesc().stream()
                 .map(PostResponseDto::new)
                 .collect(Collectors.toList());
@@ -97,6 +80,29 @@ public class PostService {
         postRepository.delete(post);
     }
 
+    // 게시글 좋아요 기능 추가
+    public void likePost(Long id, User user) {
+        Post post = findPost(id);
+
+        if (postLikeRepository.existsByUserAndPost(user, post)) {
+            throw new DuplicateRequestException("이미 좋아요 한 게시글 입니다.");
+        } else {
+            PostLike postLike = new PostLike(user, post);
+            postLikeRepository.save(postLike);
+        }
+    }
+
+    // 게시글 좋아요 기능 취소
+    public void dislikePost(Long id, User user) {
+        Post post = findPost(id);
+        Optional<PostLike> postLikeOptional = postLikeRepository.findByUserAndPost(user, post);
+        if (postLikeOptional.isPresent()) {
+            postLikeRepository.delete(postLikeOptional.get());
+        } else {
+            throw new IllegalArgumentException("해당 게시글에 취소할 좋아요가 없습니다.");
+        }
+    }
+
     // 해당 메모가 DB에 존재하는지 확인
     private Post findPost(Long id) {
         // postRepository.findById(id) : JPA 기본 제공 메서드라 Optional 이라는 응답값으로 오게 됨 -> Optional 은 값이 없을 경우에도 처리를 해야 함
@@ -104,4 +110,26 @@ public class PostService {
                 new IllegalArgumentException("해당 게시글이 존재하지 않습니다.")
         );
     }
+
+    // 전체 게시글 조회 API
+/*    public List<PostResponseDto> getPostListV1() {
+        // 방법1. 리스트 반복하며 넣어주기
+        List<Post> postList = postRepository.findAllByOrderByCreatedAtDesc();
+        // Dto 로 반환하기 위해서 postResponseDtoList 를 생성해 주고
+        List<PostResponseDto> postResponseDtoList = new ArrayList<>();
+        // postList 를 반복해 주면서
+        for (Post post : postList) {
+            // 생성자를 통해서 이 post 를 PostResponseDto 로 변환한 다음에 하나씩 add 를 해줘서 List 를 채워 응답하게 됨
+            postResponseDtoList.add(new PostResponseDto(post));
+        }
+        // 값을 넣어서 Dto 가 완성이 되면 Service 가 응답하게 됨
+        return postResponseDtoList;
+    }
+
+        public List<PostResponseDto> getPostListV2() {
+        // 방법2. Stream 형태로 변환해서 리스트로 바로 만들어주기
+        return postRepository.findAllByOrderByCreatedAtDesc().stream() // DB 에서 조회한 List 를 Stream 으로 변환
+                .map(PostResponseDto::new)  // Stream 처리를 통해 Post 를 PostResponseDto 로 변환 (PostResponseDto 생성자로 Post 객체가 들어간 메서드생성)
+                .toList(); // Stream 을 List 로 다시 변환
+    }*/
 }
