@@ -1,77 +1,83 @@
 <!DOCTYPE HTML>
-<!--
-	Prologue by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
-<html>
-	<head>
-		<title>프로필 수정</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="stylesheet" href="/css/update_profile.css" />
-	</head>
-	<body class="is-preload">
-	<!-- Header -->
-	<header id="header">
-		<h1><a href="index.html">Netflix news feed</a></h1>
-		<nav class="main">
-			<nav class="links">
-				<ul>
-					<li><a href="#">profile</a></li>
-					<li><a href="#">Log out</a></li>
-				</ul>
-			</nav>
-		</nav>
-	</header>
-		<!-- Main -->
-			<div id="main">
-				<!-- Contact -->
-					<section id="contact" class="four">
-						<div class="container">
-							<header>
-								<h2 >나의 프로필</h2>
-								<div></div>
-							</header>
-							<form method="post" action="#">
-								<div class="row">
-									<div class="image"  ><img src="/images/profile2.png" alt="" /></div><input type="hidden" id="id" th:value="${user.id}" />
-									<div class="name"><h6>이름</h6></div>
-									<div class="col-6 col-12-mobile" ><input type="text" id="username" name="username" th:value="${user.username}" /></div>
-									<div class="off-12"></div>
-									<div class="off-13"></div><div><h6>Email</h6></div>
-									<div class="col-66 col-12-mobile"><input type="text" id="email" name="email" th:value="${user.email}"  /></div>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>프로필 수정</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" th:href="@{/css/update_profile.css}" type="text/css"/>
+</head>
+<body class="is-preload">
+<header id="header">
+    <h1><a th:href="@{/}">Netflix 추천 feed</a></h1>
+    <nav class="main">
+        <nav class="links">
+            <ul>
+                <li><a th:onclick="|location.href='@{/}'|">취소</a></li>
+                <li><a href="#">로그아웃</a></li>
+                <li><a href="#" hidden="hidden"></a></li>
+            </ul>
+        </nav>
+    </nav>
+</header>
+<div id="main">
+    <section id="contact" class="four">
+        <div class="container">
+            <header>
+                <h2>나의 프로필</h2>
+                <div></div>
+            </header>
+            <form>
+                <div class="row">
+                    <div class="image"><img src="/images/profile2.png" alt=""/></div>
+                    <input type="hidden" id="id"/>
+                    <div class="name"><h6>이름</h6></div>
+                    <div class="col-6 col-12-mobile"><input type="text" id="username" name="username"
+                                                            th:value="${user.username}" readonly/></div>
+                    <div class="off-12"></div>
+                    <div class="off-13"></div>
+                    <div><h6>Email</h6></div>
+                    <div class="col-66 col-12-mobile"><input type="text" id="email" name="email"
+                                                              th:value="${user.email}"/></div>
+                    <div class="off-12"></div>
+                    <div class="col-13"><h6>나의 소개</h6></div>
+                    <div class="col-12">
+                        <textarea type="text" id="self_text" name="self_text"  th:text="${user.selfText}" ></textarea>
+                    </div>
+                    <div class="aln-left">
+                        <!--비밀번호 변경 창으로 이동-->
+                        <button type="button" class="button" id="btn-pwd-update">비밀번호 변경하기</button>
+                    </div>
+                    <div class="off-7">
+                        <button type="button" class="button" id="btn-update" onclick="editProfile()">수정하기</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+<script>
+    // 프로필 수정
+    function editProfile() {
+        let username = $(`#username`).val();
+        let email = $(`#email`).val();
+        let self_text = $(`#self_text`).val();
 
-									<div class="off-12"></div>
-									<div  class="col-13"><h6>나의 소개</h6></div>
-									<div class="col-12">
-										<textarea id="self_text" name="self_text" th:text="${user.self_text}"></textarea>
-									</div>
-									<div class="aln-left">
-                                        <!--비밀번호 변경 창으로 이동-->
-										<button type="button" class="button" id="btn-pwd-update" >비밀번호 변경하기</button>
-									</div>
-									<div class="off-7">
-										<!--<input type="submit" value="수정하기" />-->
-										<button type="button" class="button" id="btn-update">수정하기</button>
-									</div>
-								</div>
-							</form>
+        let data = {'username': username, 'email': email, 'selfText': self_text};
 
-						</div>
-					</section>
-
-			</div>
-
-
-		<!-- Scripts -->
-			<script src="/js/jquery.min.js"></script>
-			<script src="/js/jquery.scrolly.min.js"></script>
-			<script src="/js/jquery.scrollex.min.js"></script>
-			<script src="/js/browser.min.js"></script>
-			<script src="/js/breakpoints.min.js"></script>
-			<script src="/js/util.js"></script>
-			<script src="/js/update_profile.js"></script>
-
-	</body>
+        $.ajax({
+            type: "POST",
+            url: `/api/profile`,
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (response) {
+                alert('프로필 수정에 성공했습니다.');
+                window.location.reload();
+            },
+            error: function() {
+                alert("실패")
+            }
+        });
+    }
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</body>
 </html>

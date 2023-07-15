@@ -68,7 +68,7 @@ public class UserService {
             // 사용자 정보 업데이트
             user.setUsername(requestDto.getUsername());
             user.setEmail(requestDto.getEmail());
-            user.setSelfText(requestDto.getSelf_text());
+            user.setSelfText(requestDto.getSelfText());
             // TODO : 필요한 다른 정보 업데이트 작업 수행
 
             User updatedUser = userRepository.save(user);

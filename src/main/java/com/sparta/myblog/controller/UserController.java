@@ -77,22 +77,18 @@ public class UserController {
         return "update_profile";
     }
 
-    // 프로필 수정
+    // 프로필 수정 (PutMapping 하면 오류남..ajax 가 안되나?)
     //@PreAuthorize("isAuthenticated()")
-    @PutMapping("/update_profile")
-    public String modifyProfile(@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody UserProfileRequestDto requestDto, Model model) {
+    @PostMapping("/profile")
+    public String modifyProfile(@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody UserProfileRequestDto requestDto) {
         log.info("/modify-profile");
         Long userId=userDetails.getUser().getId(); // 사용자 id
-        // UserProfileRequestDto - 클라이언트가 수정한 데이터
         UserProfileResponseDto dto = userService.updateUserProfile(userId, requestDto);
-        model.addAttribute("board", dto); // 수정한 데이터 화면에 뿌려주기
-
         log.info(dto.getUsername());
         log.info(dto.getEmail());
-        log.info(dto.getSelf_text());
+        log.info(dto.getSelfText());
         log.info("프로필 수정 완료");
-        //return null;
-        return "redirect://update_profile"; // 수정 후 조회 화면에서 데이터 보여주기
+        return "redirect:/profile"; // 수정 후 조회 화면에서 데이터 보여주기
     }
 
     //프로필 사진 가져오기

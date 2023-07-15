@@ -10,5 +10,5 @@ import lombok.Setter;
 public class UserProfileRequestDto {
     private String username;
     private String email;
-    private String self_text;
+    private String selfText;
 }

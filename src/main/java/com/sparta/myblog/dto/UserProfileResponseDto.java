@@ -12,14 +12,13 @@ public class UserProfileResponseDto {
     private String username;
     private String email;
     private UserRoleEnum role;
-    private String self_text;
+    private String selfText;
 
     public UserProfileResponseDto(User user){
         this.id = user.getId();
         this.username = user.getUsername();
         this.email = user.getEmail();
-        this.role = user.getRole();
-        this.self_text = user.getSelfText();
+        this.selfText = user.getSelfText();
     }
 
 }
