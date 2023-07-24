@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>프로필</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" th:href="@{/css/profile.css}" type="text/css"/>
+</head>
+<body class="is-preload">
+<header id="header">
+    <h1><a th:href="@{/}">thread</a></h1>
+    <nav class="main">
+        <nav class="links">
+            <ul>
+                <li><a th:onclick="|location.href='@{/}'|">취소</a></li>
+                <li><a href="#">로그아웃</a></li>
+                <li><a href="#" hidden="hidden"></a></li>
+            </ul>
+        </nav>
+    </nav>
+</header>
+<div id="main">
+    <section id="contact" class="four">
+        <div class="container">
+            <header style="margin-left: 430px">
+                <h2>프로필</h2>
+                <div></div>
+            </header>
+            <form th:action method="post" enctype="multipart/form-data">
+                <div class="row">
+                    <input type="hidden" id="id"/>
+                    <div class="name"><h6>이름</h6></div>
+                    <div class="col-6 col-12-mobile"><input type="text" id="nickname" name="nickname" th:value="${user.username}"/></div>
+                    <div class="image"><input type="file" name="imageFile" ></div> <!-- 요청파일-->
+                    <img th:src="|/kp3c/user/images/${user.imageFile}|" width="300" height="300" /> <!--반환파일-->
+                    <div class="off-13"></div>
+                    <div><h6>소개</h6></div>
+                    <div class="col-66 col-12-mobile"><input type="text" id="introduction" name="introduction" th:value="${user.selfText}"/></div>
+                    <div class="off-14"></div>
+                    <div>
+                        <input type="submit" value="수정"/>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+</body>
+</html>

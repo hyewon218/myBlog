@@ -21,7 +21,7 @@ public class  Post extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) //auto_increment 값을 자동으로 생성
     @Column(name = "post_id")
-    private Long postId;
+    private Long Id;
 
     private String title;
 
@@ -40,6 +40,10 @@ public class  Post extends BaseEntity {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
     private List<PostLike> postLikes;
+
+    // 게시글 다중 파일 첨부
+    @OneToMany(mappedBy = "post",  cascade = CascadeType.ALL, orphanRemoval = true)// 게시글이 삭제되면 그 게시글에 있는 댓글들 모두 삭제가 되도록
+    private List<Post_Image> ImagetList;
 
     @Builder
     public Post(PostRequestDto requestDto) {

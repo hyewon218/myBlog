@@ -1,6 +1,7 @@
 package com.sparta.myblog.dto;
 
 import com.sparta.myblog.entity.Post;
+import com.sparta.myblog.entity.Post_Image;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,23 +15,25 @@ public class PostResponseDto {
     private Long id;
     private String title;
     private String content;
+    private String username;
     private Integer likeCount;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
     private List<CommentResponseDto> commentList;
-    private String username;
+    private List<Post_Image> imageUrlList;
 
     // 들어온 값으로 필드들을 조회해서 넣어주게 됨
     // 게시글 조회, 생성, 수정에서 사용
     public PostResponseDto(Post post) {
-        this.id = post.getPostId();
+        this.id = post.getId();
         this.title = post.getTitle();
         this.content = post.getContent();
-        this.likeCount = post.getPostLikes().size();
         this.createdAt = post.getCreatedAt();
         this.modifiedAt = post.getModifiedAt();
         this.username = post.getUser().getUsername();
+        this.likeCount = post.getPostLikes().size();
         //  Stream 처리를 통해 Comment 를 CommentResponseDto 로 변환 (CommentResponseDto 생성자로 Comment 객체가 들어간 메서드생성)
         this.commentList = post.getCommentList().stream().map(CommentResponseDto::new).collect(Collectors.toList());
+        this.imageUrlList = post.getImagetList();
     }
 }

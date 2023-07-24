@@ -5,7 +5,9 @@ import com.sparta.myblog.dto.PostRequestDto;
 import com.sparta.myblog.dto.PostResponseDto;
 import com.sparta.myblog.entity.Post;
 import com.sparta.myblog.entity.PostLike;
+import com.sparta.myblog.entity.Post_Image;
 import com.sparta.myblog.entity.User;
+import com.sparta.myblog.repository.ImageRepository;
 import com.sparta.myblog.repository.PostLikeRepository;
 import com.sparta.myblog.repository.PostRepository;
 import com.sun.jdi.request.DuplicateRequestException;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class PostService {
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
+    private final ImageRepository imageRepository;
 
     // 1. 전체 게시글 목록 조회
     public PostListResponseDto getPosts() {
@@ -33,27 +36,37 @@ public class PostService {
 
         return new PostListResponseDto(postList);
     }
+    public List<PostResponseDto> getPosts2() {
+        // postRepository 결과로 넘어온 Post 의 stream 을 map 을 통해 PostResponseDto 로 변환 -> List 로 변환
+        return postRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(PostResponseDto::new)
+                .collect(Collectors.toList());
+    }
 
     // 2. 게시글 작성 API (생성)
-    public PostResponseDto createPost(PostRequestDto requestDto, User user) {
+    public PostResponseDto createPost(PostRequestDto requestDto, User user, List<String> files) {
         // RequestDto -> Entity
         Post post = new Post(requestDto);
         post.setUser(user);
-
         postRepository.save(post);
 
+        // 게시글 다중 파일 저장
+        for (String file : files) {
+            Post_Image image= new Post_Image(file, post);
+            imageRepository.save(image);
+        }
         // Entity -> ResponseDto
         return new PostResponseDto(post);
     }
 
-    // 3. 선택한 게시글 조회 API
+    // 3. 선택한 게시글 조회
     public PostResponseDto getPost(Long id) {
         Post post = findPost(id);
-
+        imageRepository.findByPostId(post.getId());
         // Entity -> ResponseDto
         return new PostResponseDto(post);
     }
-
+////////////////////////////////////////////////////////////
     // 4. 선택한 게시글 수정 API
     @Transactional // Entity 객체가 변환된 것을 메소드가 끝날 때 (Transaction 이 끝날 때) DB에 반영을 해 줌
     public PostResponseDto updatePost(Long id, PostRequestDto requestDto, User user) {

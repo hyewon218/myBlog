@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -32,4 +33,7 @@ public class SignupRequestDto {
     private boolean admin = false;
 
     private String adminToken = "";
+
+    // 프로필 사진 추가
+    private MultipartFile imageFile;
 }

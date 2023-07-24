@@ -10,15 +10,14 @@ import lombok.Setter;
 public class UserProfileResponseDto {
     private Long id;
     private String username;
-    private String email;
-    private UserRoleEnum role;
     private String selfText;
+    private String imageFile;
 
     public UserProfileResponseDto(User user){
         this.id = user.getId();
         this.username = user.getUsername();
-        this.email = user.getEmail();
         this.selfText = user.getSelfText();
+        this.imageFile = user.getImageFile();
     }
 
 }

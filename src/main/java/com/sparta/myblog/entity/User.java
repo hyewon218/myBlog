@@ -32,19 +32,21 @@ public class User {
     @Column
     private String selfText;
 
-    public User(String username, String password, String email, UserRoleEnum role) {
+    @Column(nullable = false)
+    private String imageFile;
+
+    public User(String username, String password, String email, UserRoleEnum role, String imageFile) {
         this.username = username;
         this.password = password;
         this.role = role;
         this.email = email;
+        this.imageFile = imageFile;
     }
     public void setUsername(String username) {
         this.username = username;
     }
-    public void setEmail(String email) {
-        this.email = email;
-    }
     public void setSelfText(String selfText) {
         this.selfText = selfText;
     }
+    public void setImageFile(String imageFile) {this.imageFile = imageFile;}
 }

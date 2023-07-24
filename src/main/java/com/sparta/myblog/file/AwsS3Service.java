@@ -27,7 +27,7 @@ public class AwsS3Service {
 
     private final AmazonS3 amazonS3;
 
-    public List<String> uploadImage(List<MultipartFile> multipartFile) {
+    public List<String> uploadFile(List<MultipartFile> multipartFile) {
         List<String> fileNameList = new ArrayList<>();
 
         multipartFile.forEach(file -> {
