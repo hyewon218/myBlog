@@ -9,7 +9,7 @@
 <body class="is-preload">
 <!-- Header -->
 <header id="header">
-    <h1><a href="index.html">tread</a></h1>
+    <h1><a href="index.html">NETFLIX 추천</a></h1>
     <nav class="main">
         <nav class="links">
             <ul>
@@ -30,7 +30,7 @@
             </header>
             <form th:action method="post" enctype="multipart/form-data">
                 <div class="row">
-                    <img th:src="|/kp3c/user/images/${user.imageFile}|" width="100" height="100"/>
+                    <img th:src="|/view/user/images/${user.imageFile}|" width="200" height="200"/>
                     <div><h6 th:text="${user.username}"></h6></div>
                     <div class="col-66 col-12-mobile">
                         <div class="image"><input type="file" multiple="multiple" name="multipartFileList"></div>
@@ -38,6 +38,8 @@
                     <div class="off-12"></div>
                     <div class="col-12">
                         <textarea name="content" id="content"></textarea>
+                    </div>
+                    <div>
                     </div>
                     <div class="off-7">
                         <input type="submit" value="게시"/>
