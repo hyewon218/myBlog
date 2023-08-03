@@ -3,6 +3,7 @@ package com.sparta.myblog.service;
 import com.sparta.myblog.dto.*;
 import com.sparta.myblog.entity.*;
 
+import com.sparta.myblog.repository.PostSearchCond;
 import java.util.List;
 
 public interface PostService {
@@ -13,6 +14,14 @@ public interface PostService {
    * @return 전체 게시글 목록
    */
   List<PostResponseDto> getPosts2();
+
+  /**
+   * 키워드 검색 게시글 목록 조회
+   *
+   * @param cond 조건
+   * @return 검색한 키워드가 있는 게시글 목록 조회
+   */
+  List<PostResponseDto> searchPost(PostSearchCond cond);
 
   /**
    * 게시글 생성

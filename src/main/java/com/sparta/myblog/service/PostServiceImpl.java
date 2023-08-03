@@ -11,6 +11,8 @@ import com.sparta.myblog.exception.NotFoundException;
 import com.sparta.myblog.repository.PostImageRepository;
 import com.sparta.myblog.repository.PostLikeRepository;
 import com.sparta.myblog.repository.PostRepository;
+import com.sparta.myblog.repository.PostRepositoryQuery;
+import com.sparta.myblog.repository.PostSearchCond;
 import com.sparta.myblog.repository.UserImageRepository;
 import com.sun.jdi.request.DuplicateRequestException;
 import java.util.List;
@@ -31,11 +33,19 @@ public class PostServiceImpl implements PostService {
   private final PostImageRepository postImageRepository;
   private final UserImageRepository userImageRepository;
   private final MessageSource messageSource;
+  private final PostRepositoryQuery postRepositoryQuery;
 
   // 전체 게시글 목록 조회
   public List<PostResponseDto> getPosts2() {
     // postRepository 결과로 넘어온 Post 의 stream 을 map 을 통해 PostResponseDto 로 변환 -> List 로 변환
     return postRepository.findAllByOrderByCreatedAtDesc().stream()
+        .map(PostResponseDto::new)
+        .collect(Collectors.toList());
+  }
+
+  // 키워드 검색 게시글 목록 조회
+  public List<PostResponseDto> searchPost(PostSearchCond cond) {
+    return postRepositoryQuery.searchPost(cond).stream()
         .map(PostResponseDto::new)
         .collect(Collectors.toList());
   }
