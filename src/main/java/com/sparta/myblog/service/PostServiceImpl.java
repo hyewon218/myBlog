@@ -7,16 +7,18 @@ import com.sparta.myblog.entity.PostImage;
 import com.sparta.myblog.entity.PostLike;
 import com.sparta.myblog.entity.User;
 import com.sparta.myblog.entity.UserImage;
+import com.sparta.myblog.exception.NotFoundException;
 import com.sparta.myblog.repository.PostImageRepository;
 import com.sparta.myblog.repository.PostLikeRepository;
 import com.sparta.myblog.repository.PostRepository;
 import com.sparta.myblog.repository.UserImageRepository;
 import com.sun.jdi.request.DuplicateRequestException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,7 @@ public class PostServiceImpl implements PostService {
   private final PostLikeRepository postLikeRepository;
   private final PostImageRepository postImageRepository;
   private final UserImageRepository userImageRepository;
+  private final MessageSource messageSource;
 
   // 전체 게시글 목록 조회
   public List<PostResponseDto> getPosts2() {
@@ -75,7 +78,14 @@ public class PostServiceImpl implements PostService {
     Post post = findPost(id);
 
     if (!post.getUser().equals(user)) {
-      throw new RejectedExecutionException();
+      throw new IllegalArgumentException(
+          messageSource.getMessage(
+              "only.author.edit",
+              null,
+              "Only author can edit",
+              Locale.getDefault()
+          )
+      );
     }
 
     post.setTitle(requestDto.getTitle());
@@ -90,7 +100,14 @@ public class PostServiceImpl implements PostService {
     Post post = findPost(id);
 
     if (!post.getUser().equals(user)) {
-      throw new RejectedExecutionException();
+      throw new IllegalArgumentException(
+          messageSource.getMessage(
+              "only.author.delete",
+              null,
+              "Only author can delete",
+              Locale.getDefault()
+          )
+      );
     }
 
     postRepository.delete(post);
@@ -102,7 +119,14 @@ public class PostServiceImpl implements PostService {
     Post post = findPost(id);
 
     if (postLikeRepository.existsByUserAndPost(user, post)) {
-      throw new DuplicateRequestException("이미 좋아요 한 게시글 입니다.");
+      throw new DuplicateRequestException(
+          messageSource.getMessage(
+              "post.already.liked",
+              null,
+              "Post already been liked",
+              Locale.getDefault()
+          )
+      );
     } else {
       PostLike postLike = new PostLike(user, post);
       postLikeRepository.save(postLike);
@@ -118,15 +142,27 @@ public class PostServiceImpl implements PostService {
     if (postLikeOptional.isPresent()) {
       postLikeRepository.delete(postLikeOptional.get());
     } else {
-      throw new IllegalArgumentException("해당 게시글에 취소할 좋아요가 없습니다.");
+      throw new IllegalArgumentException(
+          messageSource.getMessage(
+              "no.like.to.cancel",
+              null,
+              "No like to cancel",
+              Locale.getDefault()
+          )
+      );
     }
   }
 
-  // 해당 메모가 DB에 존재하는지 확인
+  // 해당 게시글이 DB에 존재하는지 확인
   public Post findPost(Long id) {
     // postRepository.findById(id) : JPA 기본 제공 메서드라 Optional 이라는 응답값으로 오게 됨 -> Optional 은 값이 없을 경우에도 처리를 해야 함
     return postRepository.findById(id).orElseThrow(() ->
-        new IllegalArgumentException("해당 게시글이 존재하지 않습니다.")
-    );
+        new NotFoundException(
+            messageSource.getMessage(
+                "post.not.exist",
+                null,
+                "Post does not exist",
+                Locale.getDefault()
+            )));
   }
 }

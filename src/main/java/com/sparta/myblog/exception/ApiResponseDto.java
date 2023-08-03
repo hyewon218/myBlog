@@ -1,4 +1,4 @@
-package com.sparta.myblog.dto;
+package com.sparta.myblog.exception;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -6,13 +6,17 @@ import com.sparta.myblog.dto.UserProfileResponseDto;
 import com.sparta.myblog.entity.User;
 import com.sparta.myblog.entity.UserImage;
 import com.sparta.myblog.entity.UserRoleEnum;
+import com.sparta.myblog.exception.NotFoundException;
 import com.sparta.myblog.file.FileStore;
 import com.sparta.myblog.file.UploadFile;
 import com.sparta.myblog.repository.UserImageRepository;
 import com.sparta.myblog.repository.UserRepository;
+import com.sun.jdi.request.DuplicateRequestException;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +29,7 @@ public class UserServiceImpl implements UserService {
   private final PasswordEncoder passwordEncoder;
   private final FileStore fileStore;
   private final UserImageRepository userImageRepository;
+  private final MessageSource messageSource;
 
   private final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
 
@@ -37,21 +42,41 @@ public class UserServiceImpl implements UserService {
 
     // id 중복 확인
     if (userRepository.findByUsername(username).isPresent()) {
-      throw new IllegalArgumentException("이미 존재하는 회원입니다.");
+      throw new DuplicateRequestException(
+          messageSource.getMessage(
+              "username.already.exist",
+              null,
+              "Username already exist",
+              Locale.getDefault()
+          )
+      );
     }
 
     // email 중복 확인
     String email = requestDto.getEmail();
     Optional<User> checkEmail = userRepository.findByEmail(email);
     if (checkEmail.isPresent()) {
-      throw new IllegalArgumentException("중복된 Email 입니다.");
+      throw new DuplicateRequestException(
+          messageSource.getMessage(
+              "email.already.exist",
+              null,
+              "Email already exist",
+              Locale.getDefault()
+          )
+      );
     }
 
     // 사용자 ROLE 확인
     UserRoleEnum role = UserRoleEnum.USER;
     if (requestDto.isAdmin()) { // 관리자일 때
       if (!ADMIN_TOKEN.equals(requestDto.getAdminToken())) {
-        throw new IllegalArgumentException("관리자 암호가 틀려 등록이 불가능합니다.");
+        throw new IllegalArgumentException(
+            messageSource.getMessage(
+                "admin.password.different",
+                null,
+                "Administrator password is different",
+                Locale.getDefault()
+            ));
       }
       role = UserRoleEnum.ADMIN;
     }
@@ -76,7 +101,13 @@ public class UserServiceImpl implements UserService {
   public UserProfileResponseDto getUserProfile(Long userId) {
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("해당 Id를 찾을 수 없습니다. : " + userId));
+        .orElseThrow(() -> new NotFoundException(
+            messageSource.getMessage(
+                "user.not.found",
+                null,
+                "User not found",
+                Locale.getDefault()
+            )));
 
     UserImage userImage = userImageRepository.findByUser_Id(userId);
 
@@ -84,16 +115,29 @@ public class UserServiceImpl implements UserService {
   }
 
   // 프로필 수정
+  @Transactional
   public UserProfileResponseDto updateUserProfile(Long userId, UserProfileRequestDto requestDto)
       throws IOException {
 
     UploadFile storeImageFile = fileStore.storeFile(requestDto.getImageFile());
 
-    Optional<User> userOptional = userRepository.findById(userId);
-    Optional<UserImage> userImageOptional = userImageRepository.findById(userId);
-    if (userOptional.isPresent() || userImageOptional.isPresent()) {
-      User user = userOptional.get();
-      UserImage userImage = userImageOptional.get();
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new NotFoundException(
+            messageSource.getMessage(
+                "user.not.found",
+                null,
+                "User not found",
+                Locale.getDefault()
+            )));
+
+    UserImage userImage = userImageRepository.findById(userId)
+        .orElseThrow(() -> new NotFoundException(
+            messageSource.getMessage(
+                "image.not.exist",
+                null,
+                "Image does not exist",
+                Locale.getDefault()
+            )));
 
       // 사용자 정보 업데이트
       user.setUsername(requestDto.getUsername());
@@ -104,6 +148,4 @@ public class UserServiceImpl implements UserService {
       UserImage updateUserImage = userImageRepository.save(userImage);
       return new UserProfileResponseDto(updatedUser, updateUserImage);
     }
-    return null;
-  }
 }

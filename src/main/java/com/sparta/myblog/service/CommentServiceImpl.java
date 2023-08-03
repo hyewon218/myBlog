@@ -1,19 +1,20 @@
 package com.sparta.myblog.service;
 
-import com.sparta.myblog.dto.ApiResponseDto;
 import com.sparta.myblog.dto.CommentRequestDto;
 import com.sparta.myblog.dto.CommentResponseDto;
 import com.sparta.myblog.entity.Comment;
 import com.sparta.myblog.entity.CommentLike;
 import com.sparta.myblog.entity.Post;
 import com.sparta.myblog.entity.User;
+import com.sparta.myblog.exception.NotFoundException;
 import com.sparta.myblog.repository.CommentLikeRepository;
 import com.sparta.myblog.repository.CommentRepository;
 import com.sparta.myblog.repository.PostRepository;
 import com.sun.jdi.request.DuplicateRequestException;
+import java.util.Locale;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,14 +25,19 @@ public class CommentServiceImpl implements CommentService {
   private final CommentRepository commentRepository;
   private final PostRepository postRepository;
   private final CommentLikeRepository commentLikeRepository;
+  private final MessageSource messageSource;
 
   // 댓글 작성
-  @Transactional
   public CommentResponseDto createComment(CommentRequestDto commentRequestDto, User user) {
     // 선택한 게시글이 있다면 댓글을 등록하고 등록된 댓글 반환하기
     Post post = postRepository.findById(commentRequestDto.getPostId()).orElseThrow(
-        () -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다.")
-    );
+        () -> new NotFoundException(
+            messageSource.getMessage(
+                "post.not.exist",
+                null,
+                "Post does not exist",
+                Locale.getDefault()
+            )));
 
     Comment comment = new Comment();
     comment.setContent(commentRequestDto.getContent());
@@ -52,7 +58,14 @@ public class CommentServiceImpl implements CommentService {
     Comment comment = findComment(commentId);
 
     if (!user.getUsername().equals(comment.getUser().getUsername())) {
-      throw new IllegalArgumentException("작성자만 수정/삭제할 수 있습니다.");
+      throw new IllegalArgumentException(
+          messageSource.getMessage(
+              "only.author.edit",
+              null,
+              "Only author can edit",
+              Locale.getDefault()
+          )
+      );
     }
 
     comment.setContent(commentRequestDto.getContent());
@@ -64,19 +77,21 @@ public class CommentServiceImpl implements CommentService {
   // 댓글 삭제
   @Transactional
   public void deleteComment(Long commentId, User user) {
-    // 선택한 댓글이 있다면 댓글 삭제하고 Client 로 성공했다는 메시지, 상태코드 반환하기
+
     Comment comment = findComment(commentId);
 
     if (!user.getUsername().equals(comment.getUser().getUsername())) {
-      throw new IllegalArgumentException("작성자만 수정/삭제할 수 있습니다.");
+      throw new IllegalArgumentException(
+          messageSource.getMessage(
+              "only.author.delete",
+              null,
+              "Only author can delete",
+              Locale.getDefault()
+          )
+      );
     }
 
     commentRepository.delete(comment);
-
-    ApiResponseDto.builder()
-        .msg("댓글 삭제 성공")
-        .statusCode(HttpStatus.OK.value())
-        .build();
   }
 
   // 댓글 좋아요
@@ -86,7 +101,14 @@ public class CommentServiceImpl implements CommentService {
     Comment comment = findComment(id);
 
     if (commentLikeRepository.existsByUserAndComment(user, comment)) {
-      throw new DuplicateRequestException("이미 좋아요 한 댓글 입니다.");
+      throw new DuplicateRequestException(
+          messageSource.getMessage(
+              "comment.already.liked",
+              null,
+              "Comment already been liked",
+              Locale.getDefault()
+          )
+      );
     } else {
       CommentLike commentLike = new CommentLike(user, comment);
       commentLikeRepository.save(commentLike);
@@ -104,7 +126,14 @@ public class CommentServiceImpl implements CommentService {
     if (commentLikeOptional.isPresent()) {
       commentLikeRepository.delete(commentLikeOptional.get());
     } else {
-      throw new IllegalArgumentException("해당 댓글에 취소할 좋아요가 없습니다.");
+      throw new IllegalArgumentException(
+          messageSource.getMessage(
+              "no.like.to.cancel",
+              null,
+              "No like to cancel",
+              Locale.getDefault()
+          )
+      );
     }
   }
 
@@ -112,7 +141,12 @@ public class CommentServiceImpl implements CommentService {
   private Comment findComment(Long id) {
 
     return commentRepository.findById(id).orElseThrow(() ->
-        new IllegalArgumentException("해당 댓글이 존재하지 않습니다.")
-    );
+        new NotFoundException(
+            messageSource.getMessage(
+                "comment.not.exist",
+                null,
+                "Comment does not exist",
+                Locale.getDefault()
+            )));
   }
 }
