@@ -1,9 +1,10 @@
 package com.sparta.myblog.repository;
 
 import com.sparta.myblog.entity.Post;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface PostRepositoryQuery {
 
-  List<Post> searchPost(PostSearchCond cond);
+  Page<Post> searchPost(PostSearchCond cond, Pageable pageable);
 }

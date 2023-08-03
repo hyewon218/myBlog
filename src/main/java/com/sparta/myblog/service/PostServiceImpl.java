@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,8 +45,8 @@ public class PostServiceImpl implements PostService {
   }
 
   // 키워드 검색 게시글 목록 조회
-  public List<PostResponseDto> searchPost(PostSearchCond cond) {
-    return postRepositoryQuery.searchPost(cond).stream()
+  public List<PostResponseDto> searchPost(PostSearchCond cond, Pageable pageable) {
+    return postRepositoryQuery.searchPost(cond, pageable).stream()
         .map(PostResponseDto::new)
         .collect(Collectors.toList());
   }

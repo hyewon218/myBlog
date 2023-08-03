@@ -5,6 +5,7 @@ import com.sparta.myblog.entity.*;
 
 import com.sparta.myblog.repository.PostSearchCond;
 import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 public interface PostService {
 
@@ -21,7 +22,7 @@ public interface PostService {
    * @param cond 조건
    * @return 검색한 키워드가 있는 게시글 목록 조회
    */
-  List<PostResponseDto> searchPost(PostSearchCond cond);
+  List<PostResponseDto> searchPost(PostSearchCond cond, Pageable pageable);
 
   /**
    * 게시글 생성

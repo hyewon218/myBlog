@@ -10,6 +10,7 @@ import com.sparta.myblog.service.UserService;
 import com.sun.jdi.request.DuplicateRequestException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -66,9 +67,9 @@ public class PostController {
 
     // 키워드 검색 게시글 목록 조회 TODO : 화면에 검색 창 만들고 수정하기
     @GetMapping("posts/search")
-    public String searchPost(PostSearchCond cond, Model model){
+    public String searchPost(PostSearchCond cond, Pageable pageable, Model model){
 
-        List<PostResponseDto> postList = postService.searchPost(cond);
+        List<PostResponseDto> postList = postService.searchPost(cond, pageable);
 
         if(!postList.isEmpty()){
             model.addAttribute("posts",postList);
