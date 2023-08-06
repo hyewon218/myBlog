@@ -2,60 +2,59 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml"
       lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <link th:href="@{/css/main.css}" rel="stylesheet" type="text/css"/>
-    <title>게시판</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <link th:href="@{/css/main.css}" rel="stylesheet" type="text/css"/>
+  <title>게시판</title>
 </head>
 <body class="is-preload homepage">
 <div id="page-wrapper">
-    <!-- Header -->
-    <div id="header-wrapper">
-        <header id="header" class="container">
-            <!-- Logo -->
-            <div id="logo">
-                <h1><a href="index.html">NETFLIX 추천 FEED</a></h1>
+  <!-- Header -->
+  <div id="header-wrapper">
+    <header id="header" class="container">
+      <!-- Logo -->
+      <div id="logo">
+        <h1><a th:href="@{/}">thread</a></h1>
+      </div>
+      <!-- Nav -->
+      <nav id="nav">
+        <div sec:authentication="principal"></div>
+        <ul id="login-false">
+          <!--isAnonymous : 익명 사용자이면 true-->
+          <li><a sec:authorize="isAnonymous()" href="signup_login.html">로그인</a></li>
+        </ul>
+        <ul id="login-true">
+          <!--isAuthenticated : 인증된 사용자면 true-->
+          <li><a sec:authorize="isAuthenticated" href="/view/posts">게시글 작성</a></li>
+          <li><a sec:authorize="isAuthenticated" href="/view/user/profile">나의 프로필</a></li>
+          <li><a sec:authorize="isAuthenticated" href="">로그아웃</a></li>
+        </ul>
+      </nav>
+    </header>
+  </div>
+  <!-- Features -->
+  <div id="features-wrapper">
+    <div class="container">
+      <div class="row" id="post-box">
+        <div th:each="post:${posts}" class="col-4 col-12-medium">
+          <!-- Box -->
+          <section class="box feature" th:value="${post.id}">
+            <a th:onclick="|location.href='@{/view/posts/{id}(id=${post.id})}'|"
+               class="image featured"><img src="/images/pic10.jpeg" alt=""/></a>
+            <div class="inner">
+              <header>
+                <h2 th:text="${post.title}" id="title" class="title"></h2>
+              </header>
+              <p th:text="${post.content}" id="content" class="content"></p>
+              <br>
+              <p th:text="${post.username}" id="username" class="username"></p>
+              <p th:text="${post.createdAt}" id="create_date" class="create_date"></p>
+              <p th:text="${post.likeCount}" id="likecount" class="likecount">좋아요</p>
             </div>
-            <!-- Nav -->
-            <nav id="nav">
-                <div sec:authentication="principal"></div>
-                <ul id="login-false">
-                    <!--isAnonymous : 익명 사용자이면 true-->
-                    <li><a sec:authorize="isAnonymous()" href="signup_login.html">로그인</a></li>
-                </ul>
-                <ul id="login-true">
-                    <!--isAuthenticated : 인증된 사용자면 true-->
-                    <li><a sec:authorize="isAuthenticated" href="/api/post-page">게시글 작성</a></li>
-                    <li><a sec:authorize="isAuthenticated" href="/api/profile">나의 프로필</a></li>
-                    <li><a sec:authorize="isAuthenticated" href="">로그아웃</a></li>
-                </ul>
-            </nav>
-        </header>
-    </div>
-    <!-- Features -->
-    <div id="features-wrapper">
-        <div class="container">
-            <div class="row" id="post-box">
-                <div th:each="post:${posts}" class="col-4 col-12-medium">
-                    <!-- Box -->
-                    <section class="box feature">
-                        <!-- TODO : 사진 클릭하면 상세 페이지 나타나도록 (url : /api/posts/{id}) / 이미지는 나중에..-->
-                        <a th:href="@{api/posts/${post.id}}" class="image featured"><img src="/images/pic10.jpeg"
-                                                                                         alt=""/></a>
-                        <div class="inner">
-                            <header>
-                                <h2 th:text="${post.title}" id="title" class="title" ></h2>
-                            </header>
-                            <p th:text="${post.content}" id="content" class="content" ></p>
-                            <br>
-                            <p th:text="${post.username}" id="username" class="username" ></p>
-                            <p th:text="${post.createdAt}" id="create_date" class="create_date" ></p>
-                            <p th:text="${post.likeCount}" id="likecount" class="likecount" >좋아요</p>
-                        </div>
-                    </section>
-                </div>
-            </div>
+          </section>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 </body>
 </html>

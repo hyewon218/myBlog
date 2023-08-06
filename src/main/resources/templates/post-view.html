@@ -1,49 +1,112 @@
 <!DOCTYPE HTML>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>게시글</title>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
-    <link rel="stylesheet" href="/css/post.css"/>
+  <title>게시글</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+  <link rel="stylesheet" href="/css/post.css"/>
 </head>
 <body class="is-preload">
 <!-- Header -->
 <header id="header">
-    <h1><a href="index.html">tread</a></h1>
-    <nav class="main">
-        <nav class="links">
-            <ul>
-                <li><a href="#">프로필</a></li>
-                <li><a href="#">로그아웃</a></li>
-            </ul>
-        </nav>
+  <h1><a href="index.html">thread</a></h1>
+  <nav class="main">
+    <nav class="links">
+      <ul>
+        <li><a href="#">프로필</a></li>
+        <li><a href="#">로그아웃</a></li>
+      </ul>
     </nav>
+  </nav>
 </header>
 <!-- Main -->
 <div id="main">
-    <!-- Contact -->
-    <section id="contact" class="four">
-        <div class="container">
-            <header>
-                <h2>게시글</h2>
-                <div></div>
-            </header>
-            <form th:action method="post" enctype="multipart/form-data">
-                <div class="row">
-                    <img th:src="|/view/user/images/${user.imageFile}|" width="100" height="100" />
-                    <div><h6 th:text="${user.username}"></h6></div>
-                        <img th:each="imageUrl : ${post.imageUrlList}" th:src="|https://kp3c-aws-config-storage.s3.ap-northeast-2.amazonaws.com/${imageUrl.getImgUrl()}|" width="300" height="300"/>
-                    <div class="off-12"></div>
-                    <div class="col-12">
-                        <textarea name="content" id="content" th:text="${post.content}"></textarea>
-                    </div>
-                    <div class="off-7">
-                        <input type="submit" value="수정"/>
-                    </div>
+  <!-- Contact -->
+  <section id="contact" class="four">
+    <div class="container">
+      <header>
+        <h2>게시글</h2>
+        <label>
+          <input th:value="${post.id}" type="hidden" id="post_id">
+        </label>
+      </header>
+      <form th:action method="post" enctype="multipart/form-data">
+        <div class="row">
+          <img th:src="|/view/user/images/${post.userProfileImage}|" width="100" height="100"/>
+          <div><h6 th:text="${post.username}"></h6></div>
+          <img th:each="imageUrl : ${post.imageUrlList}"
+               th:src="${imageUrl.getImageUrl()}"
+               width="300" height="300"/>
+          <div class="off-12">
+            <section id="intro">
+              <header>
+                <h6 style="text-align: left">댓글</h6>
+                <div class="input-group mb-3">
+                  <div style="text-align: left">
+                    <img th:src="|/view/user/images/${user.imageFile}|" width="50" height="50"
+                         id="commentImage"/>
+                    <input type="text" id="comment" name="comment" style="width: 375px">
+                  </div>
+                  <button type="button" class="btn btn-dark" onclick="postComment()"
+                          style="margin-left: 250px">댓글 남기기
+                  </button>
                 </div>
-            </form>
+              </header>
+            </section>
+          </div>
+          <div class="col-12">
+            <textarea name="content" id="contents" th:text="${post.content}"></textarea>
+          </div>
+          <!--TODO : 댓글 목록 출력-->
+          <section id="sidebar">
+            <section>
+              <div class="comment-box" id="comment-box">
+                <header th:each="comment:${post.commentList}" class="mini-post">
+                  <div style="text-align: left">
+                    <img th:src="|/view/user/images/${comment.userProfileImage}|" width="50"
+                         height="50"/>
+                    <a href="#" class="author" th:text="${comment.username}"
+                       style="color: #ffffff; font-size: 15px"></a>
+                    <time class="published" th:value="${comment.createdAt}"
+                          style="color: #ffffff"></time>
+                    <h6 id="content" th:text="${comment.content}" style="color: #ffffff"></h6>
+                  </div>
+                </header>
+              </div>
+            </section>
+          </section>
+          <div class="off-7">
+            <input type="submit" value="수정"/>
+          </div>
         </div>
-    </section>
+      </form>
+    </div>
+  </section>
 </div>
+<script>
+  // 댓글 작성
+  function postComment() {
+    let post_id = $(`#post_id`).val();
+    let content = $(`#comment`).val();
+    let image_file1 = document.getElementById("commentImage").src.lastIndexOf('/');
+    let image_file = document.getElementById("commentImage").src.substring(image_file1 + 1);
+    let data = {'postId': post_id, 'content': content, 'imageFile': image_file};
+
+    $.ajax({
+      type: "POST",
+      url: `/view/comments`,
+      contentType: "application/json",
+      data: JSON.stringify(data),
+      success: function (response) {
+        alert(this.data);
+        window.location.reload();
+      },
+      error: function () {
+        alert("실패")
+      }
+    });
+  }
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </body>
 </html>
