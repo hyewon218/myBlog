@@ -4,8 +4,10 @@ import com.sparta.myblog.dto.*;
 import com.sparta.myblog.entity.*;
 
 import com.sparta.myblog.repository.PostSearchCond;
+import java.io.IOException;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface PostService {
 
@@ -31,7 +33,8 @@ public interface PostService {
    * @param user       게시글 생성 요청자
    * @return 게시글 생성 결과
    */
-  PostResponseDto createPost(PostRequestDto requestDto, User user, List<String> files);
+  PostResponseDto createPost(PostRequestDto requestDto, User user, List<MultipartFile> image)
+      throws IOException;
 
   /**
    * 게시글 단건 조회
@@ -49,7 +52,7 @@ public interface PostService {
    * @param user       게시글 수정 요청자
    * @return 수정된 게시글 정보
    */
-  PostResponseDto updatePost(Long id, PostRequestDto requestDto, User user);
+  PostResponseDto updatePost(Long id, PostRequestDto requestDto, User user, List<MultipartFile> image) throws IOException;
 
   /**
    * 게시글 삭제

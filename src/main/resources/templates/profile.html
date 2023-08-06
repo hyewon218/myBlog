@@ -29,12 +29,12 @@
                 <div class="row">
                     <input type="hidden" id="id"/>
                     <div class="name"><h6>이름</h6></div>
-                    <div class="col-6 col-12-mobile"><input type="text" id="nickname" name="nickname" th:value="${user.username}"/></div>
-                    <div class="image"><input type="file" name="imageFile" ></div> <!-- 요청파일-->
-                    <img th:src="|/kp3c/user/images/${user.imageFile}|" width="300" height="300" /> <!--반환파일-->
+                    <div class="col-6 col-12-mobile"><input type="text" id="username" name="username" th:value="${user.username}"/></div>
+                    <div class="image"><input type="file" name="profileImage" ></div> <!-- 요청파일-->
+                    <img th:src="${user.imageUrl}" width="300" height="300" /> <!--반환파일-->
                     <div class="off-13"></div>
                     <div><h6>소개</h6></div>
-                    <div class="col-66 col-12-mobile"><input type="text" id="introduction" name="introduction" th:value="${user.selfText}"/></div>
+                    <div class="col-66 col-12-mobile"><input type="text" id="selfText" name="selfText" th:value="${user.selfText}"/></div>
                     <div class="off-14"></div>
                     <div>
                         <input type="submit" value="수정"/>

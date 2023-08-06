@@ -29,21 +29,22 @@ public class  Post extends BaseEntity {
     private String content;
 
     @ManyToOne
-    @JoinColumn(name = "username", referencedColumnName = "username")
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     private User user;
 
     @JsonIgnore
     // 부모 엔티티가 자식의 생명주기를 모두 관리할 수 있게 됨.
     // 다대일양방향
-    @OneToMany(mappedBy = "post",  cascade = CascadeType.ALL, orphanRemoval = true)// 게시글이 삭제되면 그 게시글에 있는 댓글들 모두 삭제가 되도록
+    @OneToMany(mappedBy = "post",  cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> commentList;
 
+    // 게시글 좋아요
     @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
     private List<PostLike> postLikes;
 
     // 게시글 다중 파일 첨부
-    @OneToMany(mappedBy = "post",  cascade = CascadeType.ALL, orphanRemoval = true)// 게시글이 삭제되면 그 게시글에 있는 댓글들 모두 삭제가 되도록
-    private List<Post_Image> ImagetList;
+    @OneToMany(mappedBy = "post",  cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostImage> ImagetList;
 
     @Builder
     public Post(PostRequestDto requestDto) {

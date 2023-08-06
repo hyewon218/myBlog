@@ -30,7 +30,7 @@
             </header>
             <form th:action method="post" enctype="multipart/form-data">
                 <div class="row">
-                    <img th:src="|/view/user/images/${user.imageFile}|" width="200" height="200"/>
+                    <img th:src="${user.imageUrl}" width="200" height="200"/>
                     <div><h6 th:text="${user.username}"></h6></div>
                     <div class="col-66 col-12-mobile">
                         <div class="image"><input type="file" multiple="multiple" name="multipartFileList"></div>

@@ -41,7 +41,7 @@ public class CommentServiceImpl implements CommentService {
 
     Comment comment = new Comment();
     comment.setContent(commentRequestDto.getContent());
-    comment.setImageFile(commentRequestDto.getImageFile()); // 댓글 프로필 사진
+    comment.setImageUrl(commentRequestDto.getImageUrl()); // 댓글 프로필 사진
     comment.setUser(user);
     comment.setPost(post);
 
@@ -69,7 +69,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     comment.setContent(commentRequestDto.getContent());
-    comment.setImageFile(commentRequestDto.getImageFile());
+    comment.setImageUrl(commentRequestDto.getImageUrl());
 
     return new CommentResponseDto(comment);
   }
@@ -90,7 +90,6 @@ public class CommentServiceImpl implements CommentService {
           )
       );
     }
-
     commentRepository.delete(comment);
   }
 

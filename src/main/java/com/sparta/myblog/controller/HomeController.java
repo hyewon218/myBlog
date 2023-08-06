@@ -1,7 +1,7 @@
 package com.sparta.myblog.controller;
 
 import com.sparta.myblog.dto.PostResponseDto;
-import com.sparta.myblog.service.PostService;
+import com.sparta.myblog.service.PostServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -15,15 +15,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HomeController {
 
-    private final PostService postService;
+  private final PostServiceImpl postService;
 
-    // 게시글 목록 전체 조회
-    @GetMapping("/")
-    public String getPosts(Model model) {
-        log.info("게시글 전체 조회");
-        List<PostResponseDto> dto = postService.getPosts2();
-        model.addAttribute("posts", dto);
-        log.info(String.valueOf(dto.size())); // 게시글 갯수
-        return "index";
-    }
+  // 게시글 목록 전체 조회
+  @GetMapping("/")
+  public String getPosts(Model model) {
+    log.info("게시글 전체 조회");
+    List<PostResponseDto> dto = postService.getPosts2();
+    model.addAttribute("posts", dto);
+    log.info(String.valueOf(dto.size())); // 게시글 갯수
+    return "index";
+  }
 }

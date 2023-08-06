@@ -10,31 +10,39 @@ import java.util.List;
 @Table(name = "comment")
 public class Comment extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long commentId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "comment_id")
+  private long commentId;
 
-    @Column(name = "content", nullable = false)
-    private String content;
+  @Column(name = "content", nullable = false)
+  private String content;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
-    private Post post;
+  @Column(name = "image_url")
+  private String imageUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "username", referencedColumnName = "username")
-    private User user;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "post_id")
+  private Post post;
 
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.REMOVE)
-    private List<CommentLike> commentLikes;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+  private User user;
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-    public void setPost(Post post) {
-        this.post = post;
-    }
-    public void setUser(User user) {
-        this.user = user;
-    }
+  @OneToMany(mappedBy = "comment", cascade = CascadeType.REMOVE)
+  private List<CommentLike> commentLikes;
+
+  public void setContent(String content) {
+    this.content = content;
+  }
+
+  public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
+  }
+  public void setPost(Post post) {
+    this.post = post;
+  }
+  public void setUser(User user) {
+    this.user = user;
+  }
 }

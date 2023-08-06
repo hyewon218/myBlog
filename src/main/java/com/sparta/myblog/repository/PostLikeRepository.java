@@ -6,7 +6,9 @@ import com.sparta.myblog.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     Boolean existsByUserAndPost(User user, Post post);
     Optional<PostLike> findByUserAndPost(User user, Post post);

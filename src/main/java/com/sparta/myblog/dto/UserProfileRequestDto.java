@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Builder
 @Data
 public class UserProfileRequestDto {
-    private String username;
-    private String selfText;
-    private MultipartFile imageFile;
+  private String username;
+  private String selfText;
+  private MultipartFile profileImage;
 }

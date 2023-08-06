@@ -6,15 +6,15 @@ import com.sparta.myblog.entity.Post;
 import com.sparta.myblog.entity.PostImage;
 import com.sparta.myblog.entity.PostLike;
 import com.sparta.myblog.entity.User;
-import com.sparta.myblog.entity.UserImage;
 import com.sparta.myblog.exception.NotFoundException;
+import com.sparta.myblog.file.S3Uploader;
 import com.sparta.myblog.repository.PostImageRepository;
 import com.sparta.myblog.repository.PostLikeRepository;
 import com.sparta.myblog.repository.PostRepository;
 import com.sparta.myblog.repository.PostRepositoryQuery;
 import com.sparta.myblog.repository.PostSearchCond;
-import com.sparta.myblog.repository.UserImageRepository;
 import com.sun.jdi.request.DuplicateRequestException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -24,6 +24,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -32,9 +33,9 @@ public class PostServiceImpl implements PostService {
   private final PostRepository postRepository;
   private final PostLikeRepository postLikeRepository;
   private final PostImageRepository postImageRepository;
-  private final UserImageRepository userImageRepository;
   private final MessageSource messageSource;
   private final PostRepositoryQuery postRepositoryQuery;
+  private final S3Uploader s3Uploader;
 
   // 전체 게시글 목록 조회
   public List<PostResponseDto> getPosts2() {
@@ -52,18 +53,21 @@ public class PostServiceImpl implements PostService {
   }
 
   // 게시글 생성
-  public PostResponseDto createPost(PostRequestDto requestDto, User user, List<String> files) {
+  public PostResponseDto createPost(PostRequestDto requestDto, User user, List<MultipartFile> images)
+      throws IOException {
 
     Post post = new Post(requestDto);
     post.setUser(user);
     postRepository.save(post);
 
-    // 게시글 다중 파일 저장
-    for (String file : files) {
-      PostImage image = new PostImage(file, post);
-      postImageRepository.save(image);
-    }
-
+    if (images != null) {
+      for (MultipartFile image : images) {
+        String imageUrl = s3Uploader.upload(image, "image");
+        // 게시글 다중 파일 저장
+          PostImage postImage = new PostImage(imageUrl, post);
+          postImageRepository.save(postImage);
+        }
+      }
     return new PostResponseDto(post);
   }
 
@@ -73,20 +77,25 @@ public class PostServiceImpl implements PostService {
     Post post = findPost(id);
     // 게시글 다중 파일 조회
     postImageRepository.findByPostId(post.getId());
-    // 사용자 프로필 사진 조회
-    UserImage userImage = userImageRepository.findByUser_Id(
-        post.getUser().getId()); // post user_id 와 연결
 
-    return new PostResponseDto(post, userImage);
+    return new PostResponseDto(post);
   }
-
-  //////////////////////////진행중//////////////////////////////////
 
   // 선택한 게시글 수정
   @Transactional // Entity 객체가 변환된 것을 메소드가 끝날 때 (Transaction 이 끝날 때) DB에 반영을 해 줌
-  public PostResponseDto updatePost(Long id, PostRequestDto requestDto, User user) {
+  public PostResponseDto updatePost(Long id, PostRequestDto requestDto, User user, List<MultipartFile> image)
+      throws IOException {
 
     Post post = findPost(id);
+
+    if (image != null) {
+      for (MultipartFile multipartFile : image) {
+        String imageUrl = s3Uploader.upload(multipartFile, "image");
+        // 게시글 다중 파일 저장
+        PostImage postImage = new PostImage(imageUrl, post);
+        postImageRepository.save(postImage);
+      }
+    }
 
     if (!post.getUser().equals(user)) {
       throw new IllegalArgumentException(
