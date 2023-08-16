@@ -2,6 +2,7 @@ package com.sparta.myblog.security;
 
 import com.sparta.myblog.entity.User;
 import com.sparta.myblog.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,12 +13,15 @@ import org.springframework.stereotype.Service;
  * UsernamePasswordAuthenticationFilter > UserDetailsService 구현 > loadUserByUsername() > UserDetails > Authentication (createSuccessAuthentication()에서 만들어짐)
  */
 @Service
+@RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public UserDetailsServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserDetails loadUserById(Long id){
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("해당 유저가 존재하지 않습니다."));
+        return new UserDetailsImpl(user);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.sparta.myblog.config;
 import com.sparta.myblog.jwt.JwtAuthenticationFilter;
 import com.sparta.myblog.jwt.JwtUtil;
 import com.sparta.myblog.jwt.JwtAuthorizationFilter;
+import com.sparta.myblog.repository.RefreshTokenRepository;
 import com.sparta.myblog.security.UserDetailsServiceImpl;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +33,7 @@ public class WebSecurityConfig {
     private final JwtUtil jwtUtil;
     private final UserDetailsServiceImpl userDetailsService;
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -45,14 +47,14 @@ public class WebSecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil, refreshTokenRepository);
         filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
         return filter;
     }
 
     @Bean
     public JwtAuthorizationFilter jwtAuthorizationFilter() {
-        return new JwtAuthorizationFilter(jwtUtil, userDetailsService);
+        return new JwtAuthorizationFilter(jwtUtil, userDetailsService, refreshTokenRepository);
     }
 
     @Bean
@@ -69,14 +71,13 @@ public class WebSecurityConfig {
                 authorizeHttpRequests
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() // resources 접근 허용 설정
                         .requestMatchers("/").permitAll() // 메인 페이지 요청 허가
-                        .requestMatchers("/api/user/**").permitAll() // '/api/user/'로 시작하는 요청 모두 접근 허가
-                        .requestMatchers(HttpMethod.GET, "/api/posts").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/post/**").permitAll() // 'GET /api/post' 로 시작하는 요청 모두 접근 허가
+                        .requestMatchers("/view/user/**").permitAll() // '/api/user/'로 시작하는 요청 모두 접근 허가
+                        .requestMatchers(HttpMethod.GET, "/view/posts/**").permitAll() // 'GET /api/post' 로 시작하는 요청 모두 접근 허가
                         .anyRequest().authenticated() // 그 외 모든 요청 인증처리
         );
         http.formLogin((formLogin) ->
                 formLogin
-                        .loginPage("/api/user/login-page").permitAll() // 로그인 페이지를 제공하는 URL 을 설정
+                        .loginPage("/view/user/login-page").permitAll() // 로그인 페이지를 제공하는 URL 을 설정
         );
 
         // 필터 관리
