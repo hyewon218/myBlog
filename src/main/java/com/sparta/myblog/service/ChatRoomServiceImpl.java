@@ -41,15 +41,16 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     @Override
     @Transactional(readOnly = true)
-    public ChatRoomListResponseDto getmyOpenChatRooms(UserDetailsImpl userDetails) {
-        List<ChatRoom> chatRoomList = chatRoomRepository.findAllByUserId(userDetails.getUser().getId());
+    public ChatRoomListResponseDto getMyOpenChatRooms(UserDetailsImpl userDetails) {
+        List<ChatRoom> chatRoomList = chatRoomRepository.findAllByUserId(
+            userDetails.getUser().getId());
 
         return ChatRoomListResponseDto.of(chatRoomList);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ChatRoomResponseDto getOpenChatRoom(Long id) {
+    public ChatRoomResponseDto getOpenChatRoom(String id) {
         ChatRoom chatRoom = findChatRoom(id);
 
         return ChatRoomResponseDto.of(chatRoom);
@@ -59,14 +60,17 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     public void createOpenChatRoom(ChatRoomRequestDto requestDto, User user,
         List<MultipartFile> files) throws IOException {
+
         ChatRoom chatRoom = requestDto.toEntity(user);
         chatRoomRepository.save(chatRoom);
+
         // 서버간 채팅방 공유를 위해 redis hash 에 저장한다.
-        chatRoomRedisRepository.createChatRoom(requestDto,user);
+        chatRoomRedisRepository.createChatRoom(requestDto, user);
+
         if (files != null) {
             for (MultipartFile file : files) {
                 String fileUrl = awsS3upload.upload(file, "chatRoom " + chatRoom.getId());
-                if (imageRepository.existsByImageUrlAndId(fileUrl, chatRoom.getId())) {
+                if (imageRepository.existsByImageUrlAndChatRoom_Id(fileUrl, chatRoom.getId())) {
                     throw new BusinessException(ErrorCode.EXISTED_FILE);
                 }
                 imageRepository.save(new Image(chatRoom, fileUrl));
@@ -77,7 +81,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     // 오픈채팅방 수정
     @Override
     @Transactional
-    public void updateOpenChatRoom(Long id, ChatRoomRequestDto requestDto,
+    public void updateOpenChatRoom(String id, ChatRoomRequestDto requestDto,
         User user, List<MultipartFile> files) throws IOException {
         ChatRoom chatRoom = findChatRoom(id);
 
@@ -88,7 +92,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         if (files != null) {
             for (MultipartFile file : files) {
                 String fileUrl = awsS3upload.upload(file, "chatRoom " + chatRoom.getId());
-                if (imageRepository.existsByImageUrlAndId(fileUrl, chatRoom.getId())) {
+                if (imageRepository.existsByImageUrlAndChatRoom_Id(fileUrl, chatRoom.getId())) {
                     throw new BusinessException(ErrorCode.EXISTED_FILE);
                 }
                 imageRepository.save(new Image(chatRoom, fileUrl));
@@ -99,7 +103,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     // 오픈채팅방 삭제
     @Override
     @Transactional
-    public void deleteChatRoom(Long id, User user) {
+    public void deleteChatRoom(String id, User user) {
         ChatRoom chatRoom = findChatRoom(id);
 
         if (!chatRoom.getUser().getId().equals(user.getId())) {
@@ -108,7 +112,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         chatRoomRepository.delete(chatRoom);
     }
 
-    private ChatRoom findChatRoom(Long id) {
+    private ChatRoom findChatRoom(String id) {
         return chatRoomRepository.findById(id).orElseThrow(() ->
             new BusinessException(ErrorCode.NOT_FOUND_CHATROOM));
     }

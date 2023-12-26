@@ -18,7 +18,7 @@ import lombok.Setter;
 public class ChatMessageDto implements Serializable {
 
     private ChatType type; // 메시지 타입
-    private Long roomId;
+    private String roomId;
     private String sender; // 메시지 보낸사람
     private String message;
 

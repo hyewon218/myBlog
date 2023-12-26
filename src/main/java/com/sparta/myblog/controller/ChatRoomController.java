@@ -20,7 +20,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -38,35 +37,35 @@ public class ChatRoomController {
     private final ChatRoomService chatRoomService;
     private final ChatService chatService;
 
-    @GetMapping("/openchat")
+    @GetMapping("/openChat")
     @Operation(summary = "오픈채팅방 목록 조회")
     public ResponseEntity<ChatRoomListResponseDto> getOpenChatRooms() {
         return ResponseEntity.ok(chatRoomService.getOpenChatRooms());
     }
-    @GetMapping("/openchat/{id}")
-    @Operation(summary = "오픈채팅방 목록 조회")
-    public ResponseEntity<ChatRoomResponseDto> getOpenChatRoom(@PathVariable Long id) {
+    @GetMapping("/openChat/{id}")
+    @Operation(summary = "오픈채팅방 조회")
+    public ResponseEntity<ChatRoomResponseDto> getOpenChatRoom(@PathVariable String id) {
         return ResponseEntity.ok(chatRoomService.getOpenChatRoom(id));
     }
 
-    @PostMapping("/openchat")
+    @PostMapping("/openChat")
     @Operation(summary = "오픈채팅방 생성")
     public ResponseEntity<ApiResponseDto> createOpenChatRoom(
         @AuthenticationPrincipal UserDetailsImpl userDetails,
-        @ModelAttribute(value = "requestDto") ChatRoomRequestDto requestDto,
+        @RequestPart(value = "requestDto") ChatRoomRequestDto requestDto,
         @RequestPart(value = "imageFiles", required = false) List<MultipartFile> files) throws IOException {
         chatRoomService.createOpenChatRoom(requestDto,
-            userDetails.getUser(),files);
+            userDetails.getUser(), files);
 
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(new ApiResponseDto("오픈채팅방 생성 성공", HttpStatus.CREATED.value()));
     }
 
-    @PutMapping("/openchat/{id}")
+    @PutMapping("/openChat/{id}")
     @Operation(summary = "오픈채팅방 수정", description = "@PathVariable 을 통해 오픈채팅방 id를 받아와, 해당 오픈채팅방의 제목 및 설명을 수정합니다.")
     public ResponseEntity<ApiResponseDto> updateContent(
-        @Parameter(name = "roomId", description = "특정 채팅방 id", in = ParameterIn.PATH) @PathVariable Long id,
-        @ModelAttribute(value = "requestDto") ChatRoomRequestDto requestDto,
+        @Parameter(name = "roomId", description = "특정 채팅방 id", in = ParameterIn.PATH) @PathVariable String id,
+        @RequestPart(value = "requestDto") ChatRoomRequestDto requestDto,
         @RequestPart(value = "imageFiles", required = false) List<MultipartFile> files,
         @AuthenticationPrincipal UserDetailsImpl userDetails) throws IOException {
         chatRoomService.updateOpenChatRoom(id, requestDto,
@@ -74,10 +73,10 @@ public class ChatRoomController {
         return ResponseEntity.ok().body(new ApiResponseDto("오픈채팅방 수정 성공", HttpStatus.OK.value()));
     }
 
-    @DeleteMapping("/openchat/{id}")
+    @DeleteMapping("/openChat/{id}")
     @Operation(summary = "오픈채팅방 삭제", description = "@PathVariable 을 통해 오픈채팅방 Id를 받아와, 해당 오픈채팅방을 삭제합니다.")
     public ResponseEntity<ApiResponseDto> deleteChatRoom(
-        @Parameter(name = "id", description = "특정 채팅방 id", in = ParameterIn.PATH) @PathVariable Long id,
+        @Parameter(name = "id", description = "특정 채팅방 id", in = ParameterIn.PATH) @PathVariable String id,
         @AuthenticationPrincipal UserDetailsImpl userDetails) {
         chatRoomService.deleteChatRoom(id, userDetails.getUser());
         return ResponseEntity.ok()
@@ -85,10 +84,10 @@ public class ChatRoomController {
 
     }
 
-    @GetMapping("/openchat/room/{id}")
+    @GetMapping("/openChat/room/{id}")
     @Operation(summary = "오픈채팅방 내 채팅 목록 조회", description = "@PathVariable 을 통해 채팅방 id를 받아와, 해당 오픈채팅방에 존재하는 채팅 목록을 조회합니다.")
     public ResponseEntity<ChatListResponseDto> getAllChatByRoomId(
-        @Parameter(name = "roomId", description = "특정 채팅방 id", in = ParameterIn.PATH) @PathVariable Long id) {
+        @Parameter(name = "roomId", description = "특정 채팅방 id", in = ParameterIn.PATH) @PathVariable String id) {
         return ResponseEntity.ok(chatService.getAllChatByRoomId(id));
     }
 }

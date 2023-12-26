@@ -11,7 +11,7 @@ public interface ChatService {
      *
      * @param roomId 발송할 오픈채팅 방 ID
      */
-    void sendChatMessage(Long roomId, ChatMessageDto requestDto);
+    void sendChatMessage(String roomId, ChatMessageDto requestDto);
 
     /**
      * 오픈채팅방 내 채팅 목록 조회
@@ -19,7 +19,7 @@ public interface ChatService {
      * @param id 조회할 오픈채팅 방 ID
      * @return 조회된 메세지 목록
      */
-    ChatListResponseDto getAllChatByRoomId(Long id);
+    ChatListResponseDto getAllChatByRoomId(String id);
 
     /**
      * 오픈채팅 메세지 저장
@@ -27,5 +27,5 @@ public interface ChatService {
      * @param roomId     저장할 오픈채팅 방 ID
      * @param requestDto 메세지 저장 요청정보
      */
-    void saveMessage(Long roomId, ChatMessageDto requestDto);
+    void saveMessage(String roomId, ChatMessageDto requestDto);
 }
