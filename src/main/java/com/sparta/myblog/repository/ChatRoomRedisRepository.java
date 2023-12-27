@@ -2,10 +2,8 @@ package com.sparta.myblog.repository;
 
 
 import com.sparta.myblog.dto.ChatMessageDto;
-import com.sparta.myblog.dto.ChatRoomRequestDto;
 import com.sparta.myblog.entity.ChatRoom;
 import com.sparta.myblog.entity.ChatType;
-import com.sparta.myblog.entity.User;
 import com.sparta.myblog.redis.pubsub.RedisPublisher;
 import com.sparta.myblog.redis.pubsub.RedisSubscriber;
 import jakarta.annotation.PostConstruct;
@@ -66,17 +64,15 @@ public class ChatRoomRedisRepository {
     // 채팅방 생성
     // 서버간 채팅방 공유를 위해 redis hash 에 저장한다.
     // redis 에 메세지 저장하기
-    public void createChatRoom(ChatRoomRequestDto requestDto, User user) {
+    public void createChatRoom(ChatRoom chatRoom) {
 
-        // ChatRoom 를 redis 에 저장하기 위하여 직렬화 한다.
+        // ChatRoom 를 redis 에 저장하기 위하여 직렬화한다.
         redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(ChatRoom.class));
-
-        ChatRoom chatRoom = requestDto.toEntity(user);
 
         String roomId = chatRoom.getId();
 
         //redis 의 hashes 자료구조
-        //key : CHAT_MESSAGE , filed : roomId, value : chatRoom
+        //key : CHAT_ROOMS , filed : roomId, value : chatRoom
         opsHashChatRoom.put(CHAT_ROOMS, roomId, chatRoom);
 
         // 신규 Topic 을 생성하고 Listener 등록 및 Topic Map 에 저장
@@ -109,6 +105,8 @@ public class ChatRoomRedisRepository {
                 .message(messageDto.getMessage())
                 .type(ChatType.TALK)
                 .build());
+
+        log.info("레디스 서버에 메세지 전송 완료");
     }
 
     // Topic 삭제 후 Listener 해제, Topic Map 에서 삭제

@@ -38,7 +38,7 @@ public class ChatRoomViewController {
     @Operation(summary = "오픈채팅방 조회")
     public String getOpenChatRoom(@PathVariable String chatRoomId, Model model) {
         ChatRoomResponseDto chatRoomResponseDto = chatRoomService.getOpenChatRoom(chatRoomId);
-        model.addAttribute("chat", chatRoomResponseDto);
+        model.addAttribute("chatRoom", chatRoomResponseDto);
         return "openChat";
     }
 
@@ -52,11 +52,11 @@ public class ChatRoomViewController {
             return "redirect:/openChat";
         } else {
             if (chatRoomId == null) {
-                model.addAttribute("chat", new ChatRoomResponseDto());
+                model.addAttribute("chatRoom", new ChatRoomResponseDto());
             } else {
                 ChatRoomResponseDto chatRoomResponseDto = chatRoomService.getOpenChatRoom(
                     chatRoomId);
-                model.addAttribute("chat", chatRoomResponseDto);
+                model.addAttribute("chatRoom", chatRoomResponseDto);
             }
             return "createOpenChatRoom";
         }

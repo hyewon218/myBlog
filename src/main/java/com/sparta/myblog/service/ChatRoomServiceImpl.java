@@ -61,11 +61,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     public void createOpenChatRoom(ChatRoomRequestDto requestDto, User user,
         List<MultipartFile> files) throws IOException {
 
-        ChatRoom chatRoom = requestDto.toEntity(user);
+        ChatRoom chatRoom = requestDto.toEntity(user); // uuid 생성
         chatRoomRepository.save(chatRoom);
 
         // 서버간 채팅방 공유를 위해 redis hash 에 저장한다.
-        chatRoomRedisRepository.createChatRoom(requestDto, user);
+        chatRoomRedisRepository.createChatRoom(chatRoom);
 
         if (files != null) {
             for (MultipartFile file : files) {
