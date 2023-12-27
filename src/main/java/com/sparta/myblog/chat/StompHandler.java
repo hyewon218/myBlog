@@ -4,6 +4,8 @@ import com.sparta.myblog.dto.ChatMessageDto;
 import com.sparta.myblog.entity.ChatType;
 import com.sparta.myblog.jwt.JwtUtil;
 import com.sparta.myblog.repository.ChatRoomRedisRepository;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.Objects;
 import java.util.Optional;
@@ -35,8 +37,8 @@ public class StompHandler implements ChannelInterceptor {
             String jwt = accessor.getFirstNativeHeader("Authorization");
             log.info("jwt!!!!!!!!!" + jwt);
 
-            if (!jwtUtil.validateToken(
-                Objects.requireNonNull(jwt)
+            if (!jwtUtil.validateToken((URLDecoder.decode(Objects.requireNonNull(jwt),
+                        StandardCharsets.UTF_8))
                     .substring(7))) {
                 throw new IllegalArgumentException("에러");
             }
