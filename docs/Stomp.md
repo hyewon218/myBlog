@@ -48,27 +48,23 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 }
 ```
 - `@EnableWebSocketMessageBroker :` 메시지 브로커가 지원하는 ‘WebSocket 메시지 처리’를 활성화한다.
-- `registerStompEndpoints()` : 기존의 WebSocket 설정과 마찬가지로 HandShake와 통신을 담당할 EndPoint를 지정한다. 클라이언트에서 서버로 WebSocket 연결을 하고 싶을 때, `/stomp/chat`으로 요청을 보내도록 하였다.
+- `registerStompEndpoints()` : 기존의 WebSocket 설정과 마찬가지로 HandShake와 통신을 담당할 EndPoint를 지정한다. <br>
+클라이언트에서 서버로 WebSocket 연결을 하고 싶을 때,`/stomp/chat`으로 요청을 보내도록 하였다.
 - `setAllowedOriginPatterns` : cors 설정
-
-
-
-- `configureMessageBroker()` : 메모리 기반의 Simple Message Broker를 활성화한다. 메시지 브로커는 `/sub`으로 시작하는 주소의 Subscriber들에게 메시지를 전달하는 역할을 한다. 이때, 클라이언트가 서버로 메시지 보낼 때 붙여야 하는 prefix를 `/pub`로 지정하였다.
-    - `setApplicationDestinationPrefixes` :
+- `configureMessageBroker()` : 메모리 기반의 Simple Message Broker를 활성화한다. <br>
+메시지 브로커는`/sub`으로 시작하는 주소의 Subscriber들에게 메시지를 전달하는 역할을 한다. <br>
+이때, 클라이언트가 서버로 메시지 보낼 때 붙여야 하는 prefix를 `/pub`로 지정하였다.
+    - `setApplicationDestinationPrefixes`:
         - 메세지를 보낼 때, 관련 경로를 설정해주는 함수이다.
-        - client에서 `SEND` 요청을 처리한다.
+        - client에서`SEND`요청을 처리한다.
         - 클라이언트가 메세지를 보낼 때, 경로 앞에 `/pub`가 붙어있으면 Broker로 보내진다.
           ![B4DA5CC8-B3BB-4EE6-8A7D-44D68540CCC0_4_5005_c](https://github.com/JihyeChu/PetNexus/assets/126750615/8993e906-bf98-48d7-bb46-d6fed3c900a2)
-
-
-    - `enableSimpleBroker` :
-        - 메세지를 받을 때, 경로를 설정해주는 함수이다.
+    - `enableSimpleBroker`:
+        - 메세지를 받을 때, **경로를 설정**해주는 함수이다.
         - 내장 브로커를 사용하겠다는 설정이다.
-        -  `/sub`가 api에 prefix로 붙은 경우, messageBroker가 해당 경로를 가로채 처리한다.
-        - 해당 경로(`/sub`)로 `SimpleBroker`를 등록한다. `SimpleBroker`는 해당하는 경로를 구독하는 client에게 메시지를 전달하는 간단한 작업을 수행한다.
+        -  `/sub`가 api에 prefix로 붙은 경우, messageBroker가 해당 경로를 가로채 처리한다.
+        - 해당 경로(`/sub`)로`SimpleBroker`를 등록한다.`SimpleBroker`는 해당하는 경로를 구독하는 client에게 메시지를 전달하는 간단한 작업을 수행한다.
           ![41C287C2-573F-4DE6-B65E-7AFD85B288E5_4_5005_c](https://github.com/JihyeChu/PetNexus/assets/126750615/f598a54c-4ef8-4efe-b9ab-ed0caa3361ff)
-
-
 
 
 ## Message Controller 생성

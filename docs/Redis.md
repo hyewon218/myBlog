@@ -1,5 +1,17 @@
+# Redis란?
+- `Remote Dictionary Server`의 약자
+- 오픈 소스 소프트웨어
+- `휘발성`이면서 `영속성`을 가진 key-value 저장소
 
-# 첫번째 방법 : RedisRepository
+# Redis는 NoSQL
+NoSQL은 데이터 간의 관계를 정의하지 않고 고정된 스키마를 갖지 않는 새로운 형태의 데이터베이스로서,<br>
+**관계형 데이터베이스(RDBMS)를 경량화한 데이터베이스**입니다. <br>
+관계형 데이터베이스의 특징 을 제거하고 만들어진 다른 모든 형태의 DBMS를 칭하 기도 하며, <br>
+SQL 계열 질의어를 사용할 수 있다는 사실 을 강조한다는 면에서 **“Not Only SQL”** 로 불리기도 합니다.<br>
+Redis는 이러한 NoSQL의 종류 중 하나입니다.
+
+
+## 첫번째 방법 : RedisRepository
 Spring Data Redis 의 Redis Repository 를 이용하면 간단하게 Domain Entity 를 Redis Hash 로 만들 수 있습니다.<br>
 다만 트랜잭션을 지원하지 않기 때문에 만약 트랜잭션을 적용하고 싶다면 RedisTemplate 을 사용해야 합니다.
 
@@ -78,7 +90,7 @@ public class RedisRepositoryTest {
 - timeToLive 를 설정했기 때문에 30초 뒤에 사라집니다. ttl 명령어로 확인할 수 있습니다.
 
 
-# 두번째 방법 : RedisTemplate
+## 두번째 방법 : RedisTemplate
 RedisTemplate 을 사용하면 특정 Entity 뿐만 아니라 여러가지 원하는 타입을 넣을 수 있습니다.<br>
 template 을 선언한 후 원하는 타입에 맞는 Operations 을 꺼내서 사용합니다.
 
@@ -233,34 +245,57 @@ Cache란 나중에 요청할 결과를 미리 저장해둔 후 빠르게 서비�
 4. 다시 Cache와 작업한다.
 
 Cache는 일반적으로 위와 같은 flow로 사용된다.<br> 
-동일한 flow에서 어떻게 사용하냐에 따라 look aside cache(Lazy Loading)와 write back으로 나뉜다.
+동일한 flow에서 어떻게 사용하냐에 따라 `look aside cache(Lazy Loading)`와 `write back`으로 나뉜다.
 
-### look aside cache(Lazy Loading)
-
+### ⭐️ look aside cache(Lazy Loading)
 1. Cache에 Data 존재유무 확인
 2. Data가 있다면 Cache의 Data 사용
 3. Data가 없다면 실제 DB Data 사용 
-4. DB에서 가져온 Data를 Cache에 저장 
+4. **DB에서 가져온 Data를 Cache에 저장**
 
 look aside cache는 캐시를 한번 접근하여 데이터가 있는지 판단한 후, <br>
 있다면 cache의 데이터를 사용하며 없다면 실제 DB 또는 API를 호출하는 로직으로 구현된다.<br> 
-대부분의 cache를 사용한 개발이 해당 프로세스를 따르고 있습니다.
+**대부분의 cache를 사용한 개발이 해당 프로세스를 따르고 있다.**
 
 ### Write back
-
 1. Data를 Cache에 저장
 2. Cache에 있는 Data를 일정 기간 동안 Check
-3. 모여있는 Data를 DB에 저장 
-4. Cache에 있는 Data 삭제
+3. **모여있는 Data를 DB에 저장**
+4. **Cache에 있는 Data 삭제**
 
-write back은 cache를 다르게 이용하는 방법이다. DB는 접근 횟수가 적을수록 전체 시스템의 퍼포먼스는 좋아진다.<br>
-데이터를 쓰거나 많은 데이터를 읽게되면 DB에서 Disk를 접근하게 된다. 이렇게 되면 Application의 속도 저하가 일어날 수 있다.<br> 
-따라서 write back은 데이터를 cache에 모으고 일정한 주기 또는 일정한 크기가 되면 한번에 처리하는 것이다.ㄴ
+write back은 cache를 다르게 이용하는 방법이다. **DB는 접근 횟수가 적을수록 전체 시스템의 퍼포먼스는 좋아진다.**<br>
+데이터를 쓰거나 많은 데이터를 읽게 되면 DB에서 **Disk**를 접근하게 된다. 이렇게 되면 Application의 속도 저하가 일어날 수 있다.<br> 
+따라서 write back은 **데이터를 cache에 모으고** 일정한 주기 또는 일정한 크기가 되면 **한번에 처리**하는 것이다.
+
+<br>
 
 ## Spring에서 캐시 사용법(@Cacheable, @CachePut, @CacheEvict)
-###  @EnableCaching 추가
-Spring에서 @Cacheable과 같은 어노테이션 기반의 캐시 기능을 사용하기 위해서는 먼저 별도의 선언이 필요하다.<br>
-그렇기 때문에 @EnableCaching 어노테이션을 설정 클래스에 추가해 주어야 한다.
+
+### 1. SpringBoot에 종속성 추가하기
+#### gradle
+```groovy
+    // redis cache
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+```            
+
+### 2. `@EnableCaching` 추가
+Spring에서 `@Cacheable`과 같은 어노테이션 기반의 캐시 기능을 사용하기 위해서는 먼저 별도의 선언이 필요하다.<br>
+그렇기 때문에 `@EnableCaching` 어노테이션을 설정 클래스에 추가해 주어야 한다.<br>
+이 어노테이션을 붙여주면 이제 해당 애플리케이션의 캐싱 기능은 활성화 되어 <br>
+DB에서 데이터를 읽어오는 부분에서 다른 어노테이션을 사용해 캐싱 기능을 이용할 수 있다.
+
+```java
+@EnableCaching
+@EnableJpaAuditing
+@SpringBootApplication
+public class MyBlogApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(MyBlogApplication.class, args);
+    }
+}
+```
+
 ```java
 @EnableCaching
 @Configuration 
@@ -269,14 +304,37 @@ public class CacheConfig {
 }
 ```
 ### 캐시 매니저 빈 추가
+```java
+@Configuration
+@EnableCaching
+public class CachingConfig { 
+  // 하나의 저장소를 사용하는 경우
+  @Bean
+  public CacheManager cacheManager() {
+    return new ConcurrentMapCacheManager("memberCacheStore");
+  }
+
+  // 여러 개의 저장소를 추가할 경우
+  @Bean
+  public CacheManager cacheManager() {
+    SimpleCacheManager simpleCacheManager = new SimpleCacheManager();
+    simpleCacheManager.setCaches(
+        Arrays.asList(new ConcurrentMapCache("cacheStore1"), new ConcurrentMapCache("cacheStore2")));
+    return simpleCacheManager;
+  }
+}
+```
+
 
 ### 캐시를 저장/조회하기 위한 @Cacheable
+**동일한 파리 미터로 메서드를 호출 이력과 반환 결과가 캐시에 저장되어 있으면, 캐시를 사용함**
+
 Redis Cache 활성화를 위한 @Annotation을 사용하였는데.<br> 
-해당 @Cacheable은 DB에서 애플리케이션으로 데이터를 가져오고 Cache에 저장하는데 사용되며<br> 
-요청한 데이터가 redis에 존재하지 않을 경우 DB에서 조회하며 redis에 존재할경우 해당 저장소에서 바로 읽어 응답한다.<br>
+해당 @Cacheable은 **DB에서 애플리케이션으로 데이터를 가져오고 Cache에 저장**하는데 사용되며<br> 
+**요청한 데이터가 redis에 존재하지 않을 경우 DB에서 조회**하며 **redis에 존재할경우 해당 저장소에서 바로 읽어 응답**한다.<br>
 Value(아무렇게 해도 상관없음!)와 key를 설정하여 호출된 응답을 저장해주며 cacheManger 항목을 이용하여 해당 어노테이션에 적용될 config를 각각 설정할 수 있다.
 
-클래스나 인터페이스에도 캐시를 지정할 수는 있지만 이렇게 작업하는 경우는 상당히 드물고, 보통 메소드 단위로 적용한다.<br>
+클래스나 인터페이스에도 캐시를 지정할 수는 있지만 이렇게 작업하는 경우는 상당히 드물고, 보통 **메소드 단위**로 적용한다.<br>
 캐시를 적용할 메소드에 @Cacheable 어노테이션을 붙여주면 **캐시에 데이터가 없을 경우에는 기존의 로직을 실행한 후에 캐시에 데이터를 추가하고,**<br> 
 **캐시에 데이터가 있으면 캐시의 데이터를 반환한다.**
 

@@ -1,6 +1,7 @@
 ## 변경사항
 • 채팅방 id String으로 수정 -> redis에 저장하려면 String으로 해줘야한다고 함
-• 일단 오픈채팅방만 적용하였습니다.
+
+
 
 ## 📍Redis Pub/Sub 란?
 ![66D3C3A3-420D-4FC8-B23B-51D02E3B2BF1](https://github.com/JihyeChu/PetNexus/assets/126750615/c1475ca6-a765-4c20-ae0d-e8c7996ce07f)
@@ -68,8 +69,8 @@ public class RedisSubscriber implements MessageListener {
     }
 }
 ```
-`MessageListenerAdapter` 객체를 이용해 Message 를 처리할 Listner 를 설정해준다.
-`RedisMessageListenerContainer` 객체를 이용해 Topic 과 Listner 를 연결해준다.
+`MessageListenerAdapter` 객체를 이용해 Message 를 처리할 Listner 를 설정해준다.<br>
+`RedisMessageListenerContainer` 객체를 이용해 Topic 과 Listner 를 연결해준다.<br>
 Topic 에 Message 가 생성되면 `MessageListner` 가 해당 Message 를 처리한다.
 
 
@@ -129,8 +130,15 @@ public class RedisConfig {
 ```
 
 ## Redis 에 저장 및 불러오기 위한 Repository 정의
-`HashOperations` : Redis 에 Map 형태 (Key, Value) 로 데이터에 접근 및 저장을 하기 위한 객체
-`MessageListenerContainer` : JMS(Java Message Service) template과 함께 스프링에서 JMS메시징을 사용하는 핵심 컴포넌트. MDP(message-driven POJO)를 사용하여 비동기 메시지를 받는데 사용. 메시지의 수신관점에서 볼 때 필요. MessageListener를 생성하는데 사용
+`HashOperations` : Redis 에 Map 형태 (Key, Value) 로 데이터에 접근 및 저장을 하기 위한 객체<br> 
+- Hashes :  **Value**가 **Map 자료구조와 같은 Key/Value 형태**가 됨<br>
+    - 하나의 Key에 여러개의 필드를 갖는 구조가 됨
+
+
+`MessageListenerContainer` : JMS(Java Message Service) template과 함께 스프링에서 JMS메시징을 사용하는 핵심 컴포넌트.<br> 
+MDP(message-driven POJO)를 사용하여 비동기 메시지를 받는데 사용. <br>
+메시지의 수신관점에서 볼 때 필요. MessageListener를 생성하는 데 사용
+
 ```java
 @Log4j2
 @RequiredArgsConstructor
@@ -287,34 +295,29 @@ public class ChatController {
     6. header 정보에서 구독 destination 정보를 얻고, roomId를 추출
     7. 클라이언트 입장 메시지를 채팅방에 발송(redis publish) - html 에 보여주기
     8. Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
-2.  ChatRoomRedisRepository
+2.  ChatRoomRedisRepository<br>
     a. 채팅방 생성 : 서버간 채팅방 공유를 위해 redis hash 에 저장한다.
+     ![C9D86211-1592-4837-B93B-D05B1470BE80_1_105_c](https://github.com/JihyeChu/PetNexus/assets/126750615/19defc02-9c97-489e-97e1-d3c02810353f)
+    
+    b. 채팅방 입장 : redis 에 topic 을 만들고 pub/sub 통신을 하기 위해 리스너를 설정
+     ![2C9CEACE-92D2-4B95-97BF-1C021152D7F7](https://github.com/hyewon218/kim-jpa2/assets/126750615/88d70b63-3b6d-4b0e-a3c6-a3e1211961d3)
 
-
-![C9D86211-1592-4837-B93B-D05B1470BE80_1_105_c](https://github.com/JihyeChu/PetNexus/assets/126750615/19defc02-9c97-489e-97e1-d3c02810353f)
-
-
-b. 채팅방 입장 : redis 에 topic 을 만들고 pub/sub 통신을 하기 위해 리스너를 설정
-![A54074B4-7114-43C8-9D79-EBB05AD774E7_1_105_c](https://github.com/JihyeChu/PetNexus/assets/126750615/a5cff526-5a66-43ec-9352-82f4f270499f)
-
-c. 신규 Topic 을 생성하고 Listener 등록 및 Topic Map 에 저장
-- Topic Map : topic 이름으로 topic 정보를 가져와 메시지를 발송할 수 있도록 Map 에 저장, 채팅방의 대화 메시지를 발행하기 위한 redis topic 정보, 서버별로 채팅방에 매치되는 topic 정보를 Map 에 넣어 roomId로 찾을수 있도록 한다.
-- addListener - 구독자,채팅방 (topic이 String이어야) 짝지어 등록
-- redisSubscriber - RedisSubscriber 클래스의 onMessage 로
-• **여러 서버에서 SSE 를 구현하기 위한 Redis Pub/Sub Redis
-• 메세지가 발행(publish)되면 대기하고 있던 onMessage 가 해당 메세지를 받아 처리
-• subscribe 해두었던 topic 에 publish 가 일어나면 메서드가 호출된다.
-
+    c. 신규 Topic 을 생성하고 Listener 등록 및 Topic Map 에 저장
+    - Topic Map : topic 이름으로 topic 정보를 가져와 메시지를 발송할 수 있도록 Map 에 저장, 채팅방의 대화 메시지를 발행하기 위한 redis topic 정보, 서버별로 채팅방에 매치되는 topic 정보를 Map 에 넣어 roomId로 찾을수 있도록 한다.
+    - addListener - 구독자,채팅방 (topic이 String이어야) 짝지어 등록
+    - redisSubscriber - RedisSubscriber 클래스의 onMessage 로
+      -  **여러 서버에서 SSE 를 구현하기 위한 Redis Pub/Sub Redis**
+      -  메세지가 발행(publish)되면 대기하고 있던 `onMessage` 가 해당 메세지를 받아 처리
+      -  subscribe 해두었던 topic 에 publish 가 일어나면 메서드가 호출된다.
 
 3. RedisSubscriber
     1. 여러 서버에서 SSE 를 구현하기 위한 Redis Pub/SubRedis
     2. 메세지가 발행(publish)되면 대기하고 있던 onMessage 가 해당 메세지를 받아 처리
     3. subscribe 해두었던 topic 에 **publish** 가 일어나면 메서드가 호출된다. (*RedisPublisher → RedisSubscriber*)
     4. onMessage
-       a. redis 에서 발행된 데이터를 받아 deserialize
-       b. ChatRoom 객체로 매핑
+       a. redis 에서 발행된 데이터를 받아 deserialize<br>
+       b. ChatRoom 객체로 매핑<br>
        c. WebSocket 구독자에게 채팅 메세지 Send
-
 
 4. 채팅 입력
     1. */pub/chat/message - ChatController의 message()*
@@ -324,5 +327,10 @@ c. 신규 Topic 을 생성하고 Listener 등록 및 Topic Map 에 저장
         1. *ChatRoomRedisRepository의 pushMessage()*
             1. *RedisPublisher의 publish()*
                 1. Template.convertAndSend(*topic*.getTopic(), *chatMessageDto*);}
-                    1. roomId를 통해 얻은 topic에 메세지 전달
+                    1. **roomId를 통해 얻은 topic에 메세지 전달**
                         1. *RedisSubscriber의 onMessage()*
+
+## 채팅방에서의 pub/sub 컨셉
+- 채팅방 생성 : pub / sub 구현을 위한 Topic이 생성됨
+- 채팅방 입장 : Topic 구독
+- 채팅방에서 메시지를 송수신 : 해당 Topic으로 메세지를 송신(pub), 메세지를 수신(sub)

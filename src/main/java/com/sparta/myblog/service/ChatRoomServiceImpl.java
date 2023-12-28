@@ -64,7 +64,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         ChatRoom chatRoom = requestDto.toEntity(user); // uuid 생성
         chatRoomRepository.save(chatRoom);
 
-        // 서버간 채팅방 공유를 위해 redis hash 에 저장한다.
+        // 📍 서버간 채팅방 공유를 위해 redis hash 에 저장한다.
         chatRoomRedisRepository.createChatRoom(chatRoom);
 
         if (files != null) {

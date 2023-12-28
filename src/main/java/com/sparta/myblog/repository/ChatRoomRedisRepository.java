@@ -71,23 +71,30 @@ public class ChatRoomRedisRepository {
 
         String roomId = chatRoom.getId();
 
-        //redis 의 hashes 자료구조
-        //key : CHAT_ROOMS , filed : roomId, value : chatRoom
+        // ⭐️ redis 의 hashes 자료구조
+        // key : CHAT_ROOMS , filed : roomId, value : chatRoom
         opsHashChatRoom.put(CHAT_ROOMS, roomId, chatRoom);
 
         // 신규 Topic 을 생성하고 Listener 등록 및 Topic Map 에 저장
         ChannelTopic topic = new ChannelTopic(roomId);
+
         redisMessageListener.addMessageListener(redisSubscriber, topic);
+
         topics.put(roomId, topic);
     }
 
-    // 채팅방 입장 : redis 에 topic 을 만들고 pub/sub 통신을 하기 위해 리스너를 설정
+    // 채팅방 입장 (subscribe) : redis 에 topic 을 만들고 pub/sub 통신을 하기 위해 리스너를 설정
     public void enterChatRoom(String roomId) {
+
         ChannelTopic topic = topics.get(roomId);
+
+        log.info("레디스 topic 확인 : "+ topic);
+
         if (topic == null) {
             topic = new ChannelTopic(roomId);
         }
         redisMessageListener.addMessageListener(redisSubscriber, topic);
+
         topics.put(roomId, topic);
     }
 
@@ -95,9 +102,12 @@ public class ChatRoomRedisRepository {
         return topics.get(roomId);
     }
 
-    // 특정 Topic 에 메시지 발행
+    // 특정 Topic 에 메시지 발행 (publish)
     public void pushMessage(String roomId, ChatMessageDto messageDto) {
+
+        // roomId 를 통해 (생성, 입장 시 redis 에 저장된) topic 을 얻는다.
         ChannelTopic topic = topics.get(roomId);
+
         redisPublisher.publish(topic,
             ChatMessageDto.builder()
                 .sender(messageDto.getSender())
@@ -106,7 +116,7 @@ public class ChatRoomRedisRepository {
                 .type(ChatType.TALK)
                 .build());
 
-        log.info("레디스 서버에 메세지 전송 완료");
+        log.info("레디스 서버 특정 Topic 에 메세지 전송 완료");
     }
 
     // Topic 삭제 후 Listener 해제, Topic Map 에서 삭제

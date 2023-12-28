@@ -70,11 +70,13 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+    // redis cache
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+
     // websocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     // STOMP
     implementation group: 'org.webjars', name: 'stomp-websocket', version: '2.3.3-1'
-
     // swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 }

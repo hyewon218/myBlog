@@ -25,7 +25,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-@EnableCaching
+@EnableCaching // 캐싱 기능을 활성화
 @Configuration
 @RequiredArgsConstructor
 public class RedisConfig {
@@ -79,7 +79,7 @@ public class RedisConfig {
     // 컨테이너 설정
     // MessageListenerContainer : JMS template 과 함께 스프링에서 JMS 메시징을 사용하는 핵심 컴포넌트
     // MDP(message-driven POJO)를 사용하여 비동기 메시지를 받는데 사용. 메시지의 수신관점에서 볼 떄 필요
-    //MessageListener 를 생성하는 데 사용
+    // MessageListener 를 생성하는 데 사용
     @Bean
     public RedisMessageListenerContainer redisMessageListenerContainer( // (1)sub
         MessageListenerAdapter listenerAdapter
