@@ -1,6 +1,6 @@
 package com.sparta.myblog.jwt;
 
-import com.sparta.myblog.entity.redishash.RefreshToken;
+import com.sparta.myblog.redis.redishash.RefreshToken;
 import com.sparta.myblog.repository.RefreshTokenRepository;
 import com.sparta.myblog.security.UserDetailsImpl;
 import com.sparta.myblog.security.UserDetailsServiceImpl;
@@ -42,10 +42,17 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
         FilterChain filterChain) throws ServletException, IOException {
 
-        String tokenValue = jwtUtil.getJwtFromHeader(req);
+        //String tokenValue = jwtUtil.getJwtFromHeader(req);
+
+        // Cookie 에서 JWT 를 가지고 있는 Cookie 가지고 오는 코드
+        String tokenValue = jwtUtil.getTokenFromRequest(req);
         String refreshToken = req.getHeader("RefreshToken");
 
         if (StringUtils.hasText(tokenValue)) {
+            // JWT 토큰 substring
+            tokenValue = jwtUtil.substringToken(tokenValue);
+            log.info(tokenValue);
+
             boolean isValid = false;
             try {
                 isValid = jwtUtil.validateToken(tokenValue);
@@ -97,7 +104,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     }
 
     // 인증 객체 생성
-    private Authentication createAuthentication(String username) throws UsernameNotFoundException {
+    public Authentication createAuthentication(String username) throws UsernameNotFoundException {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         return new UsernamePasswordAuthenticationToken(userDetails, null,
             userDetails.getAuthorities());

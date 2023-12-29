@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.myblog.dto.LoginRequestDto;
 import com.sparta.myblog.entity.User;
 import com.sparta.myblog.entity.UserRoleEnum;
-import com.sparta.myblog.entity.redishash.RefreshToken;
+import com.sparta.myblog.redis.redishash.RefreshToken;
 import com.sparta.myblog.repository.RefreshTokenRepository;
 import com.sparta.myblog.security.UserDetailsImpl;
 import jakarta.servlet.FilterChain;
@@ -67,7 +67,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String token = jwtUtil.createToken(username, role);
 
         response.addHeader("RefreshToken", refreshTokenVal);
+        log.info(refreshTokenVal);
         response.addHeader(JwtUtil.AUTHORIZATION_HEADER, token);
+
+        // addJwtToCookie() - Cookie 생성하고 Response 객체에 넣어주는 메서드
+        jwtUtil.addJwtToCookie(token, response);
     }
 
     @Override
