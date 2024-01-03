@@ -15,6 +15,8 @@ public class RedisPublisher {
     private final RedisTemplate<String, Object> redisTemplate;
 
     // 채팅
+    // publish() 메소드는 외부로부터 ChannelTopic 을 받아와, 해당 채널로 메시지를 발행한다.
+    // 메시지 발행에는 RedisTemplate 의 convertAndSend() 메소드가 사용된다.
     public void publish(ChannelTopic topic, ChatMessageDto chatMessageDto){
 
         log.info("채팅방 : " + topic.getTopic() + " Message : " + chatMessageDto.getMessage());

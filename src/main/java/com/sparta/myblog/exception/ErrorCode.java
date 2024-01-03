@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorCode {
 
+    ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "C001", " Entity가 존재하지 않습니다."),
+
     // user
     NOT_FOUND_USER(HttpStatus.BAD_REQUEST, "U001", "존재하지 않는 사용자입니다."),
     EXISTED_EMAIL(HttpStatus.CONFLICT, "U002", "중복된 이메일 입니다."),
@@ -52,7 +54,9 @@ public enum ErrorCode {
 
     // SSE
     NOT_FOUND_NOTIFICATION(HttpStatus.BAD_REQUEST,"S001","존재하지 않는 알람입니다."),
-    SSE_CONNECTION_ERROR(HttpStatus.BAD_REQUEST,"S002","SSE 연결이 올바르지 않습니다.")
+    SSE_CONNECTION_ERROR(HttpStatus.BAD_REQUEST,"S002","SSE 연결이 올바르지 않습니다."),
+    SSE_SEND_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S003", "SSE Send Error"),
+
     ;
 
     private final HttpStatus httpStatus;
