@@ -36,6 +36,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     runtimeOnly 'com.mysql:mysql-connector-j'
     implementation 'mysql:mysql-connector-java:8.0.28'
+
     // JPA 설정
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
@@ -65,20 +66,37 @@ dependencies {
     // redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.modelmapper:modelmapper:2.3.6'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     //자바 역직렬화 문제 해결 패키지
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     // redis cache
-    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'javax.cache:cache-api:1.1.0'
+    implementation 'org.springframework.boot:spring-boot-starter-cache' // 스프링 application 내부 캐시
+    implementation 'org.ehcache:ehcache:3.8.1'
+
+    implementation 'org.springframework.session:spring-session-data-redis'
+
+    // SSE
+    implementation 'org.springframework:spring-webmvc:5.3.23'
+
+    // kafka
+    implementation 'org.springframework.kafka:spring-kafka'
 
     // websocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
     // STOMP
     implementation group: 'org.webjars', name: 'stomp-websocket', version: '2.3.3-1'
+
     // swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+    implementation 'io.springfox:springfox-swagger2:2.9.2'
+    implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+
+    implementation('com.vladmihalcea:hibernate-types-60:2.21.1')
+
+
 }
 
 tasks.named('test') {
