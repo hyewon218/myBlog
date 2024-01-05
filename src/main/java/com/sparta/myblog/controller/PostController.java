@@ -2,11 +2,11 @@ package com.sparta.myblog.controller;
 
 import com.sparta.myblog.dto.*;
 import com.sparta.myblog.exception.ApiResponseDto;
+import com.sparta.myblog.kafka.NotificationProducer;
 import com.sparta.myblog.security.UserDetailsImpl;
 import com.sparta.myblog.repository.PostSearchCond;
 import com.sparta.myblog.service.PostServiceImpl;
 import com.sparta.myblog.service.UserServiceImpl;
-import com.sun.jdi.request.DuplicateRequestException;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +32,7 @@ public class PostController {
 
   private final PostServiceImpl postService;
   private final UserServiceImpl userService;
+  private final NotificationProducer notificationProducer;
 
   // 게시글 작성 페이지(메인페이지에서 클릭)
   // http://localhost:8080/view/posts
@@ -75,7 +76,7 @@ public class PostController {
   // 게시글 상세 페이지 조회
   // http://localhost:8080/view/post/1
   @GetMapping("/posts/{id}")
-  public String detailPost(@PathVariable Long id, Model model,
+  public String detailPost(@PathVariable String id, Model model,
       @AuthenticationPrincipal UserDetailsImpl userDetails) {
     // 댓글 프로필 사진 (유저 정보 가져와서 보여주기)
     UserProfileResponseDto profileDto = userService.getUserProfile(userDetails.getUser().getId());
@@ -89,7 +90,7 @@ public class PostController {
 
   // 게시글 상세 페이지 수정
   @PutMapping(value = "/posts/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public String updatePost(@PathVariable Long id,
+  public String updatePost(@PathVariable String id,
       @RequestPart(value = "multipartFileList", required = false) List<MultipartFile> image,
       @AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody PostRequestDto requestDto,
       Model model) throws IOException {
@@ -102,7 +103,7 @@ public class PostController {
 
   // 게시글 삭제
   @DeleteMapping("/posts/{id}")
-  public Long deletePost(@PathVariable Long id,
+  public String deletePost(@PathVariable String id,
       @AuthenticationPrincipal UserDetailsImpl userDetails) {
     postService.deletePost(id, userDetails.getUser());
 
@@ -110,22 +111,23 @@ public class PostController {
   }
 
   // 게시글 좋아요 기능 추가
-  @PostMapping("/posts/{id}/like")
-  public ResponseEntity<ApiResponseDto> likePost(@PathVariable Long id,
+  @PostMapping("/posts/{postId}/like")
+  public PostOnlyIdResponseDto likePost(@PathVariable String postId,
       @AuthenticationPrincipal UserDetailsImpl userDetails) {
-    try {
-      postService.likePost(id, userDetails.getUser());
-    } catch (DuplicateRequestException e) {
-      return ResponseEntity.badRequest()
-          .body(new ApiResponseDto(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
+
+    ResponseWithNotificationEventDto<PostOnlyIdResponseDto> dto = postService.likePost(postId,
+        userDetails.getUser());
+    if (dto.getNotificationEvent() != null) {
+      // kafka 에 발행
+      notificationProducer.send(dto.getNotificationEvent());
     }
-    return ResponseEntity.status(HttpStatus.ACCEPTED)
-        .body(new ApiResponseDto("게시글 좋아요 성공", HttpStatus.ACCEPTED.value()));
+
+    return dto.getResponse();
   }
 
   // 게시글 좋아요 기능 취소
   @DeleteMapping("/posts/{id}/like")
-  public ResponseEntity<ApiResponseDto> dislikePost(@PathVariable Long id,
+  public ResponseEntity<ApiResponseDto> dislikePost(@PathVariable String id,
       @AuthenticationPrincipal UserDetailsImpl userDetails) {
     try {
       postService.dislikePost(id, userDetails.getUser());

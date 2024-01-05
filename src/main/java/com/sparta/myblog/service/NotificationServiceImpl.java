@@ -72,17 +72,17 @@ public class NotificationServiceImpl {
             alarmSlices.getPageable(), alarmSlices.hasNext());
     }
 
-    public void send(Long alarmReceiverId, NotificationType notificationType,
-        NotificationArgs notificationArgs, SseEventName sseEventName) {
-        User user = userRepository.findById(alarmReceiverId).orElseThrow(() ->
-            new NoEntityException(ErrorCode.ENTITY_NOT_FOUND));
-        Notification notification = Notification.of(notificationType, notificationArgs, user);
-
-        notificationRepository.save(notification);
-
+    public void send(Long alarmReceiverId,SseEventName sseEventName) {
         redisTemplate.convertAndSend(sseEventName.getValue(),
             getRedisPubMessage(alarmReceiverId, sseEventName));
+    }
 
+    public void createNotification(Long alarmReceiverId, NotificationType notificationType, NotificationArgs notificationArgs) {
+        User alarmReceiver = userRepository.findById(alarmReceiverId).orElseThrow(() ->
+            new NoEntityException(ErrorCode.ENTITY_NOT_FOUND));
+        Notification notification = Notification.of(notificationType, notificationArgs, alarmReceiver);
+
+        notificationRepository.save(notification);
     }
 
     public SseEmitter subscribe(String username, String lastEventId) {

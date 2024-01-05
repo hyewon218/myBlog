@@ -42,7 +42,7 @@ public interface PostService {
    * @param id 조회할 게시글 ID
    * @return 조회된 게시글 정보
    */
-  PostResponseDto getPost(Long id);
+  PostResponseDto getPost(String id);
 
   /**
    * 게시글 수정
@@ -52,7 +52,7 @@ public interface PostService {
    * @param user       게시글 수정 요청자
    * @return 수정된 게시글 정보
    */
-  PostResponseDto updatePost(Long id, PostRequestDto requestDto, User user, List<MultipartFile> image) throws IOException;
+  PostResponseDto updatePost(String id, PostRequestDto requestDto, User user, List<MultipartFile> image) throws IOException;
 
   /**
    * 게시글 삭제
@@ -60,7 +60,7 @@ public interface PostService {
    * @param id   삭제 요청 게시글 ID
    * @param user 게시글 삭제 요청자
    */
-  void deletePost(Long id, User user);
+  void deletePost(String id, User user);
 
   /**
    * 게시글 좋아요
@@ -68,7 +68,7 @@ public interface PostService {
    * @param id   좋아요 요청 게시글 ID
    * @param user 게시글 좋아요 요청자
    */
-  void likePost(Long id, User user);
+  ResponseWithNotificationEventDto<PostOnlyIdResponseDto> likePost(String id, User user);
 
   /**
    * 게시글 좋아요 취소
@@ -76,5 +76,5 @@ public interface PostService {
    * @param id   좋아요 취소 게시글 ID
    * @param user 게시글 좋아요 취소 요청자
    */
-  void dislikePost(Long id, User user);
+  void dislikePost(String id, User user);
 }

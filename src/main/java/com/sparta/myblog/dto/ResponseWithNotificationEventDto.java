@@ -13,7 +13,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class ResponseWithAlarmEventDto<T> {
+public class ResponseWithNotificationEventDto<T> {
 
     private T response;
     private NotificationEvent notificationEvent;

@@ -1,13 +1,19 @@
 package com.sparta.myblog.service;
 
+import com.sparta.myblog.dto.PostOnlyIdResponseDto;
 import com.sparta.myblog.dto.PostRequestDto;
 import com.sparta.myblog.dto.PostResponseDto;
+import com.sparta.myblog.dto.ResponseWithNotificationEventDto;
+import com.sparta.myblog.entity.NotificationArgs;
+import com.sparta.myblog.entity.NotificationType;
 import com.sparta.myblog.entity.Post;
 import com.sparta.myblog.entity.PostImage;
 import com.sparta.myblog.entity.PostLike;
+import com.sparta.myblog.entity.SseEventName;
 import com.sparta.myblog.entity.User;
 import com.sparta.myblog.exception.NotFoundException;
 import com.sparta.myblog.file.S3Uploader;
+import com.sparta.myblog.kafka.NotificationEvent;
 import com.sparta.myblog.repository.PostImageRepository;
 import com.sparta.myblog.repository.PostLikeRepository;
 import com.sparta.myblog.repository.PostRepository;
@@ -41,14 +47,14 @@ public class PostServiceImpl implements PostService {
   public List<PostResponseDto> getPosts2() {
     // postRepository 결과로 넘어온 Post 의 stream 을 map 을 통해 PostResponseDto 로 변환 -> List 로 변환
     return postRepository.findAllByOrderByCreatedAtDesc().stream()
-        .map(PostResponseDto::new)
+        .map(PostResponseDto::of)
         .collect(Collectors.toList());
   }
 
   // 키워드 검색 게시글 목록 조회
   public List<PostResponseDto> searchPost(PostSearchCond cond, Pageable pageable) {
     return postRepositoryQuery.searchPost(cond, pageable).stream()
-        .map(PostResponseDto::new)
+        .map(PostResponseDto::of)
         .collect(Collectors.toList());
   }
 
@@ -65,25 +71,27 @@ public class PostServiceImpl implements PostService {
         String imageUrl = s3Uploader.upload(image, "image");
         // 게시글 다중 파일 저장
           PostImage postImage = new PostImage(imageUrl, post);
+          postImage.updateOriginalImageName(image.getOriginalFilename());
+
           postImageRepository.save(postImage);
         }
       }
-    return new PostResponseDto(post);
+    return PostResponseDto.of(post);
   }
 
   // 선택한 게시글 조회
-  public PostResponseDto getPost(Long id) {
+  public PostResponseDto getPost(String id) {
 
     Post post = findPost(id);
     // 게시글 다중 파일 조회
     postImageRepository.findByPostId(post.getId());
 
-    return new PostResponseDto(post);
+    return PostResponseDto.of(post);
   }
 
   // 선택한 게시글 수정
   @Transactional // Entity 객체가 변환된 것을 메소드가 끝날 때 (Transaction 이 끝날 때) DB에 반영을 해 줌
-  public PostResponseDto updatePost(Long id, PostRequestDto requestDto, User user, List<MultipartFile> image)
+  public PostResponseDto updatePost(String id, PostRequestDto requestDto, User user, List<MultipartFile> image)
       throws IOException {
 
     Post post = findPost(id);
@@ -111,11 +119,11 @@ public class PostServiceImpl implements PostService {
     post.setTitle(requestDto.getTitle());
     post.setContent(requestDto.getContent());
 
-    return new PostResponseDto(post);
+    return PostResponseDto.of(post);
   }
 
   // 선택한 게시글 삭제
-  public void deletePost(Long id, User user) {
+  public void deletePost(String id, User user) {
 
     Post post = findPost(id);
 
@@ -134,9 +142,9 @@ public class PostServiceImpl implements PostService {
   }
 
   // 게시글 좋아요 기능 추가
-  public void likePost(Long id, User user) {
+  public ResponseWithNotificationEventDto<PostOnlyIdResponseDto> likePost(String postId, User user) {
 
-    Post post = findPost(id);
+    Post post = findPost(postId);
 
     if (postLikeRepository.existsByUserAndPost(user, post)) {
       throw new DuplicateRequestException(
@@ -150,11 +158,25 @@ public class PostServiceImpl implements PostService {
     } else {
       PostLike postLike = new PostLike(user, post);
       postLikeRepository.save(postLike);
+
+      // 알림 생성
+      NotificationEvent notificationEvent = new NotificationEvent(NotificationType.LIKE,
+          NotificationArgs.builder()
+              .commentId(null)
+              .postId(postId)
+              /* 알람 발생시킨 멤버 */
+              .callingMemberNickname(user.getUsername())
+              .build(), post.getUser().getId(), SseEventName.NOTIFICATION_LIST);
+
+      return ResponseWithNotificationEventDto.<PostOnlyIdResponseDto>builder()
+          .response(PostOnlyIdResponseDto.of(postId))
+          .notificationEvent(notificationEvent)
+          .build();
     }
   }
 
   // 게시글 좋아요 기능 취소
-  public void dislikePost(Long id, User user) {
+  public void dislikePost(String id, User user) {
 
     Post post = findPost(id);
     Optional<PostLike> postLikeOptional = postLikeRepository.findByUserAndPost(user, post);
@@ -174,9 +196,9 @@ public class PostServiceImpl implements PostService {
   }
 
   // 해당 게시글이 DB에 존재하는지 확인
-  public Post findPost(Long id) {
+  public Post findPost(String id) {
     // postRepository.findById(id) : JPA 기본 제공 메서드라 Optional 이라는 응답값으로 오게 됨 -> Optional 은 값이 없을 경우에도 처리를 해야 함
-    return postRepository.findById(id).orElseThrow(() ->
+    return postRepository.findByApiId(id).orElseThrow(() ->
         new NotFoundException(
             messageSource.getMessage(
                 "post.not.exist",
