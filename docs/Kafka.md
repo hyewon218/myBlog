@@ -47,13 +47,28 @@ Message Broker에서는 subscribe한 메시지를 저장하기 힘들다.
 - 따라서 이벤트 발행 및 소비 시 토픽을 지정해 주어야 한다.
 - 토픽 내에는 **여러 개의 Partition**이 존재하여 **이벤트는 각각의 Partition에 분리되어 저장된다**.
 
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/83b85eb8-306d-45fd-87dc-6cba461efd74" width="60%"/><br>
+
+
 ### Partition
 - topic 내에 실제로 **이벤트가 record 형태로 저장**되는 곳이다.
 - **큐** 자료 구조로 되어있으며 이벤트 발행 시 **partition 내에 이벤트가 레코드로 저장**되고 **저장된 이벤트는 기본적으로는 삭제되지 않는다**.(설정에 따라 주기적으로 삭제)
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/4ae8997e-91c9-4882-af5e-6319fc9e7dd4" width="60%"/><br>
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/1a3dae36-a4c7-4b7c-8afd-63a3a54827d9" width="60%"/><br>
+
+> Queue란?<br>
+> FIFO(First in First Out)형식의 자료구조를 의미한다.<br>
+> 순차적으로 진행되는 Process에 사용<br>
+> Message는 순차적으로 Queue에 들어오게 되고,<br>
+> Queue는 순차적으로 들어오는 Message를 받아서 갖고 있다가 하나하나 순서에 맞게 전달한다.
+
+
 - **Partition 하나 당 consumer가 하나 붙어서 소비**할 수 있고 Partition 개수 만큼 Consumer를 생성하면 **병렬 처리가 가능**하기 때문에 **성능을 늘리는 데 활용**할 수 있다.
 - Partition은 늘릴 수는 있지만 줄일 수 없기 때문에 **Partition 개수를 늘리는 것에 신중해야 한다**.
-- Partition 개수보다 Consumer가 많은 경우 Consumer가 많아서 생기는 이점이 없기 때문에 **Consumer를 Partition개수보다 항상 같거나 작게 유지**해야한다.
-- 컨슈머가 이벤트를 소비해도 record가 사라지지 않으며 컨슈머 그룹의 **offset**이 변경되기만 한다.
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/b084704c-34eb-41ef-939d-de56c408e59c" width="60%"/><br> 
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/85b8dc9f-2c8d-4fa0-b9e3-a37febbee9cb" width="60%"/><br>
+- Partition 개수보다 Consumer가 많은 경우 Consumer가 많아서 생기는 이점이 없기 때문에 **Consumer를 Partition개수보다 항상 같거나 작게 유지**해야 한다.
+- 컨슈머가 이벤트를 소비해도 record가 사라지지 않으며 컨슈머 그룹의 **offset**이 변경되기만 한다. 
 
 ### Producer
 - topic에 이벤트를 publish한다.
@@ -90,18 +105,41 @@ Message Broker에서는 subscribe한 메시지를 저장하기 힘들다.
 
 ### Broker, Replication, In Sync Replica(ISR) for High Availability
 #### Broker
-- kafka 서버를 말한다.
-- 가용성을 위해서 broker를 3이상 유지하는 것이 권장된다.
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/40681833-bc70-455f-96ac-beb81d5e1505" width="40%"/><br>
+- `kafka 서버`를 말한다.<br>
 
-#### Replication
-- 가용성을 위해 topic의 partition을 서로 다른 여러 broker에 복제하여 저장하는 것을 말한다.
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/52be39fb-8e2a-46ee-af73-3aa223d8cf98" width="60%"/><br>
+- 가용성을 위해서 broker를 **3이상 유지**하는 것이 권장된다.
+
+#### Replication(Partition의 복제)
+- **가용성**을 위해 **topic의 partition**을 **서로 다른 여러 broker에 복제하여 저장**하는 것을 말한다.
 - DB Replication등과 다르게 Replica partition에서 Read역할 만해준다거나 하는 부하 분산의 역할은 하지 못하고 <br>
 단순히 leader partition의 fail-over시 복구 하기 위한 용도로서 replication을 수행한다.
-- 특정 브로커가 leader, follwer로 구분되어있는 것이 아니라 partition마다 모두 다르다.
+- 특정 브로커가 leader, follwer로 구분되어있는 것이 아니라 partition 마다 모두 다르다.
 - 일반적인 database에서의 replication과는 다르게 leader에는 아예 요청이 가지 않는다. 단순히 레코드 저장을 보장해주는 역할만 수행한다.
 
-#### In Sync Replica
-- leader 파티션과 다른 broker들에 저장된 replica를 묶어 ISR이라고 한다.
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/f6a88e93-eaa5-4e52-ab20-5c7438511a27" width="60%"/><br>
+- 만약 replication이 1이라면 partition은 한 개만 존재한다.<br>
+
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/d9bb7075-14d1-4d4e-a42e-6bba1aedf13e" width="60%"/><br>
+- replication이 2라면 partition은 원본 한 개와 복제본 한 개로 총 두 개가 존재한다.
+
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/80d3fac3-9623-4e3d-adff-fe4747699a8b" width="60%"/><br>
+- replication이 3이라면 partition은 원본 한 개와 복제본 두 개로 총 세 개가 존재한다.
+
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/0c8acc47-2633-4846-a5cd-1629378cdd1d" width="60%"/><br>
+- broker 갯수에 따라서 replication 갯수가 달라진다.
+- broker 갯수가 3이면 replication 갯수는 4가 될 수 없다.
+
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/50206019-35a9-44a9-92c9-8cad06603b1f" width="60%"/><br>
+- 원본 partition은 `leader partition`, 나머지 복제본 partition은 `follwer partition`이라고 부른다.
+
+#### In Sync Replica(`leader partition` + `follwer partition`)
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/69f876ab-ff54-4089-a97b-21bc86964567" width="60%"/><br>
+- leader 파티션과 다른 broker들에 저장된 replica를 묶어 `ISR`이라고 한다.
+
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/420823de-2332-4c81-ab1f-e43c5b0a8553" width="60%"/><br>
+- 만약 Replication이 2이면 broker 1개가 죽더라도 복제본, 즉 `follwer partition` 이 존재하므로 복구가 가능하다.
 - Replication 개수를 지정하여 ISR에 묶일 partition의 개수를 지정할 수 있다(**적어도 2개이상** 으로 하는 것이 바람직하다).
 
 ### ZooKeeper, Controller
@@ -141,8 +179,13 @@ bin/kafka-server-start.sh config/server.properties1
 bin/kafka-server-start.sh config/server.properties2
 ```
 > ### kafka scale out<br>
+> broker.id 만 겹치지 않게 추가하면 끝<br>
+> 추가 후 **카프카 실행** systemctl start kafka-server.service<br>
+> 추가한 서버들이 카프카 클러스터에 조인되었는지 확인 -> 주키퍼 서버에서 broker.id 조회하여 새로 추가한 id 가 잘 조회되는지 확인<br>
+> 잘 조회 됐다면, 신규 카프카 서버에 파티션 추가
+
 > 서버를 추가하는 방법은 매우 간단하다.
-> server.properties에서 설정을 변경하면 되는데 다른 설정 값은 기존 kafka 설정과 동일하게 진행하고 일반적으로 변경이 필요한 부분은 아래 2가지 설정이다.
+> `server.properties`에서 설정을 변경하면 되는데 다른 설정 값은 기존 kafka 설정과 동일하게 진행하고 일반적으로 변경이 필요한 부분은 아래 2가지 설정이다.
 > - broker.id
 > - listeners
 > broker.id는 kafka 클러스터 내부에서 유일한 값을 가져야 하기 때문에 기존에 사용하던 broker.id와 다른 값을 지정하고,
