@@ -49,12 +49,13 @@ Message Broker에서는 subscribe한 메시지를 저장하기 힘들다.
 
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/83b85eb8-306d-45fd-87dc-6cba461efd74" width="60%"/><br>
 
+<br>
 
 ### Partition
 - topic 내에 실제로 **이벤트가 record 형태로 저장**되는 곳이다.
-- **큐** 자료 구조로 되어있으며 이벤트 발행 시 **partition 내에 이벤트가 레코드로 저장**되고 **저장된 이벤트는 기본적으로는 삭제되지 않는다**.(설정에 따라 주기적으로 삭제)
+- **큐** 자료 구조로 되어있으며 이벤트 발행 시 **partition 내에 이벤트가 record로 저장**되고 **저장된 이벤트는 기본적으로는 삭제되지 않는다**.(설정에 따라 주기적으로 삭제)<br>
   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/4ae8997e-91c9-4882-af5e-6319fc9e7dd4" width="60%"/><br>
-  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/1a3dae36-a4c7-4b7c-8afd-63a3a54827d9" width="60%"/><br>
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/1a3dae36-a4c7-4b7c-8afd-63a3a54827d9" width="30%"/><br>
 
 > Queue란?<br>
 > FIFO(First in First Out)형식의 자료구조를 의미한다.<br>
@@ -62,23 +63,34 @@ Message Broker에서는 subscribe한 메시지를 저장하기 힘들다.
 > Message는 순차적으로 Queue에 들어오게 되고,<br>
 > Queue는 순차적으로 들어오는 Message를 받아서 갖고 있다가 하나하나 순서에 맞게 전달한다.
 
-
+- **record**에 포함된 메세지 키 또는 메세지 값에 따라서 partition의 위치가 결정된다.
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/a833a9c2-d5d5-4138-b958-ff0ba3ddf2e2" width="30%"/> <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2e0c6600-8efb-429d-a81c-8c96ae2d17d9" width="30%"/><br>
+- 동일한 메세지 키를 가진 record들은 동일한 partition에 들어가기 때문에 순서를 지켜서 데이터를 처리할 수 있다는 장점이 있다.
 - **Partition 하나 당 consumer가 하나 붙어서 소비**할 수 있고 Partition 개수 만큼 Consumer를 생성하면 **병렬 처리가 가능**하기 때문에 **성능을 늘리는 데 활용**할 수 있다.
 - Partition은 늘릴 수는 있지만 줄일 수 없기 때문에 **Partition 개수를 늘리는 것에 신중해야 한다**.
   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/b084704c-34eb-41ef-939d-de56c408e59c" width="60%"/><br> 
   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/85b8dc9f-2c8d-4fa0-b9e3-a37febbee9cb" width="60%"/><br>
 - Partition 개수보다 Consumer가 많은 경우 Consumer가 많아서 생기는 이점이 없기 때문에 **Consumer를 Partition개수보다 항상 같거나 작게 유지**해야 한다.
-- 컨슈머가 이벤트를 소비해도 record가 사라지지 않으며 컨슈머 그룹의 **offset**이 변경되기만 한다. 
+- 컨슈머가 이벤트를 소비해도 record가 사라지지 않으며 컨슈머 그룹의 **offset**이 변경되기만 한다.
+
+<br>
 
 ### Producer
 - topic에 이벤트를 publish한다.
-- publish 시에 **Ack 조건을 설정**하여 **publish를 얼마나 보장할지 결정**할 수 있다.
-  - ack = 0 ; publish가 실패해도 ack를 보낸다.
-  - ack = 1 ; publish가 **leader에만 성공**하면 ack를 보낸다. 이 경우 leader가 fail하여 replica가 leader가 될 경우 이벤트가 유실 될 수 있다.
-  - ack = all; publish가 **leader에서 성공**하고 **replica에도 모두 복제 되어야** ack를 보낸다. ack = 1에서 leader가 fail하는 경우에도 이벤트가 유실 되지 않는다.
+- publish 시에 **Ack 조건을 설정**하여 **publish를 얼마나 보장할지 결정**할 수 있다.(고가용성 유지-partition의 replication과 관련)<br>
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/1a3aef45-aee2-4e22-856d-1339388f1768" width="60%"/><br>
+  - `ack = 0` ; leader partition에 데이터를 전송하고 응답값을 받지 않는다. publish가 실패해도 ack를 보낸다.<br>
+    -> 속도는 빠르지만 데이터 유실 가능성이 있다.
+
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/680b0a12-6346-4a57-850f-ee69a7f624d7" width="60%"/><br>  
+  - `ack = 1` ; publish가 **leader에만 성공**하면 ack를 보낸다. 이 경우 leader가 fail하여 replica가 leader가 될 경우 이벤트가 유실 될 수 있다.
+
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/249e2bf9-c2ec-42fe-a0ea-a25ee380f55f" width="60%"/><br>
+  - `ack = all`; publish가 **leader에서 성공**하고 **replica(follower)에도 모두 복제 되어야** ack를 보낸다.<br> 
+  ack = 1에서 leader가 fail하는 경우에도 이벤트가 유실 되지 않는다.<br>
+  -> 속도가 현저히 느리다.
 
 > (추가) acks:all 설정 시 `min.in-sync.replicas`도 2 이상으로 변경해 주어야 한다.<br>
-
 
 - 이벤트 발행 시 어떤 파티션에 이벤트가 저장될 지는 랜덤이기 때문에 **이벤트 소비 순서는 보장되지 않는다**.
 - 만약, 순서가 꼭 보장되어야 한다면 key값을 지정하여 publish할 수 있고 이 경우 하나의 partition에만 event가 저장된다.
@@ -93,6 +105,8 @@ Message Broker에서는 subscribe한 메시지를 저장하기 힘들다.
 > `min.in-sync.replicas` : 최소 리플리케이션 팩터를 지정하는 옵션<br>
 > `Replication Factor` 는 **토픽의 파티션의 복제본을 몇 개를 생성할지**에 대한 설정
 
+<br>
+
 ### Consumer Group과 Consumer
 - Consumer는 이벤트를 소비할 때 **Polling**을 활용하여 주기적으로 **소비할 이벤트가 존재하는지 확인**하는 방식을 취한다.<br>
 즉, broker가 이벤트를 소비할 시점이나 소비할 주체를 결정하지 않고 **Consumer가 직접 결정**한다.(**Redis pub-sub의 경우 publish시 subscriber들에게 redis가 메시지를 전해준다**.)
@@ -105,11 +119,13 @@ Message Broker에서는 subscribe한 메시지를 저장하기 힘들다.
 
 ### Broker, Replication, In Sync Replica(ISR) for High Availability
 #### Broker
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/40681833-bc70-455f-96ac-beb81d5e1505" width="40%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/40681833-bc70-455f-96ac-beb81d5e1505" width="30%"/><br>
 - `kafka 서버`를 말한다.<br>
 
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/52be39fb-8e2a-46ee-af73-3aa223d8cf98" width="60%"/><br>
 - 가용성을 위해서 broker를 **3이상 유지**하는 것이 권장된다.
+
+<br>
 
 #### Replication(Partition의 복제)
 - **가용성**을 위해 **topic의 partition**을 **서로 다른 여러 broker에 복제하여 저장**하는 것을 말한다.
@@ -134,6 +150,11 @@ Message Broker에서는 subscribe한 메시지를 저장하기 힘들다.
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/50206019-35a9-44a9-92c9-8cad06603b1f" width="60%"/><br>
 - 원본 partition은 `leader partition`, 나머지 복제본 partition은 `follwer partition`이라고 부른다.
 
+> 3개 이상의 broker를 사용할 때 replication은 3으로 설정하는 것을 추천한다.
+> <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/a296a284-efdb-4c82-aed9-b8934b24d6db" width="60%"/><br>
+
+<br>
+
 #### In Sync Replica(`leader partition` + `follwer partition`)
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/69f876ab-ff54-4089-a97b-21bc86964567" width="60%"/><br>
 - leader 파티션과 다른 broker들에 저장된 replica를 묶어 `ISR`이라고 한다.
@@ -141,6 +162,11 @@ Message Broker에서는 subscribe한 메시지를 저장하기 힘들다.
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/420823de-2332-4c81-ab1f-e43c5b0a8553" width="60%"/><br>
 - 만약 Replication이 2이면 broker 1개가 죽더라도 복제본, 즉 `follwer partition` 이 존재하므로 복구가 가능하다.
 - Replication 개수를 지정하여 ISR에 묶일 partition의 개수를 지정할 수 있다(**적어도 2개이상** 으로 하는 것이 바람직하다).
+
+> `leader partition` + `follwer partition`의 역할은?
+> `leader partition` : producer가 topic의 parition에 데이터를 전달할 때 전달받는 주체
+
+<br>
 
 ### ZooKeeper, Controller
 - `ZooKeeper`는 **카프카의 메타데이터를 저장**하고 **상태관리** 등의 목적으로 이용한다.
@@ -152,6 +178,133 @@ Message Broker에서는 subscribe한 메시지를 저장하기 힘들다.
 
 <br>
 
+## ⭐️AWS에 카프카 클러스터 설치, 실행하기
+#### 카프카 고가용성의 핵심은 3개 이상의 카프카 broker로 이루어진 클러스터에서 진가를 발휘하게 된다.
+1. **AWS로 EC2 3대 발급**<br>
+테스트 목적의 머신이므로 Amazon Linux 2 AMI(Amazon Machine Image)를 t2.micro로 발급받습니다.<br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/7264148b-d466-41d1-b76d-0571030bf92d" width="60%"/><br>
+
+2. **각 서버 접속 후 wget 명령어로 Zookeeper 설치**<br>
+이제 실질적인 애플리케이션 설치 및 실행을 하도록 한다. 여기부터는 3개의 인스턴스(노드)에 모두 동일하게 진행하면 된다.<br>
+
+zookeeper 설치를 위해 아래 명령어로 zookeeper 3.4.12 압축파일을 다운받아 준다,
+```shell
+wget https://downloads.apache.org/zookeeper/zookeeper-3.7.2/apache-zookeeper-3.7.2-bin.tar.gz
+````
+다운받은 zookeeper 압축파일은 아래 명령어로 풀어준다.
+```shell
+tar xvf -apache-zookeeper-3.7.2-bin.tar.gz
+````
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/3bc9c4f1-3d51-4b9d-8707-6171408cf4d3" width="40%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/c2605b1e-70bf-4a82-8e65-cdcdeefcf93a" width="60%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/8e2e4a4f-cbc1-4055-8586-e57c6058e03f" width="60%"/><br>
+
+이제 zookeeper의 configuration을 설정해야 한다.<br>
+zookeeper폴더내부의 conf폴더에 zoo.cfg파일을 생성하여 아래와 같이 configuration을 넣어준다.<br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/946c0d78-a90a-4ec4-ac74-2ad66cd52c32" width="60%"/><br>
+
+```groovy
+  tickTime=2000
+  dataDir=/var/lib/zookeeper
+  clientPort=2181
+  initLimit=20
+  syncLimit=5
+  server.1=test-broker01:2888:3888
+  server.2=test-broker02:2888:3888
+  server.3=test-broker03:2888:3888
+```  
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/0554cdfa-e0c9-4251-8315-b126d5eba83f" width="60%"/><br>
+
+
+<br>
+
+이제 zookeeper 앙상블을 만들기 위해 각 zookeeper마다 myid라는 파일을 만들어줘야 한다.<br> 
+myid의 위치는 /var/lib/zookeeper/myid 이고, 해당 파일에는 숫자를 하나 넣으면 된다.<br> 
+test-broker01은 1, test-broker02는 2, test-broker03은 3 으로 지정한다.
+```shell
+// 만약 test-broker01에서 실행한 경우 1이 나와야함
+cat /var/lib/zookeeper/myid
+```
+이제 zookeeper을 실행한다.
+```shell
+./bin/zkServer.sh start
+ZooKeeper JMX enabled by default
+Using config: /home/ec2-user/zookeeper-3.7.2/bin/../conf/zoo.cfg
+Strating zookeeper ... STARTED
+```
+
+3. **방화벽 설정 및 /etc/hosts 설정**<br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/5227519b-0757-4435-a581-c0575a1a2433" width="60%"/><br>
+zookeeper와 카프카 클러스터가 각각 통신을 하기 위해서는 아래와 같이 inbound규칙을 추가해야 한다.<br> 
+기본적으로 aws ec2를 발급받은 뒤 security group의 기본설정은 outbound에 대해 anywere로 open되어 있으므로 inbound만 추가해 준다.<br> 
+추가해야할 port는 아래와 같다. 각 port는 anywhere 기준으로 열도록 한다.
+
+테스트의 편의를 위해 이번에 만든 3개의 인스턴스의 이름은 test-broker01, 02, 03로 지정하여 진행한다.<br> 
+이를 위해 각 host별로 /etc/hosts를 설정해줘야 하는데, 자기자신의 host는 0.0.0.0으로 설정하고 나머지 host는 ip로 할당되록 설정해 준다.
+```groovy
+// 만약 test-broker01인 경우
+0.0.0.0 test-broker01
+14.252.123.4 test-broker02
+55.231.124.1 test-broker03
+```
+
+> 기본적으로 SSH 22번 포트만 설정되어 있다. 
+
+4. **Kafka 설치**
+zookeeper가 설치완료되었으니 이제 kafka를 다운받고 실행하겠습니다. 이번에 다운받아서 테스트할 버젼은 2.1.0입니다.
+```shell
+wget https://archive.apache.org/dist/kafka/2.1.0/kafka_2.11-2.1.0.tgz
+```
+마찬가지로 아래 명령어를 통해 압축을 풀어준다,
+```shell
+tar xvf kafka_2.11-2.1.0.tgz
+````
+kafka실행을 위해서 broker.id 설정, zookeeper에 대한 설정과 listener설정을 아래와 같이 설정한다.<br> 
+대상 파일은 kafka 폴더 내부에 config/server.properties 이다.
+```shell
+// test-broker01인 경우 아래와 같이 설정합니다.
+# The id of the broker. This must be set to a unique integer for each broker.
+broker.id=0
+listeners=PLAINTEXT://:9092
+advertised.listeners=PLAINTEXT://test-broker01:9092
+zookeeper.connect=test-broker01:2181,test-broker02:2181,test-broker03/test
+```
+
+참고로 zookeeper 설정시 마지막에 /test 와 같이 route를 넣는 것을 추천한다.<br>
+이렇게 넣을 경우 zookeeper의 root node가 아닌 child node에 카프카정보를 저장하게 되므로 유지보수에 이득이 있다.
+
+이제 kafka를 실행해본다.
+```shell
+./bin/kafka-server-start.sh ../config/server.properties
+````
+이것으로 kafka 클러스터를 구축 및 실행 완료하였다!
+
+
+5. **console-producer,consumer 테스트**
+실제로 kafka 클러스터가 동작하는지는 외부망에서 정상적으로 접근이 되는지 테스트를 해야한다.<br> 
+이번에는 local machine(맥북)에서 kafka-console-producer와 kafka-console-consumer로 정상 동작하는지 테스트해보도록 한다.
+```shell
+./bin/kafka-topics.sh --create --zookeeper test-broker01:2181,test-broker02:2181,test-broker03:2181/test \
+  --replication-factor 3 --partitions 1 --topic test
+```
+이제 console-producer와 console-consumer를 동시에 켜고 topic에 데이터가 정상적으로 처리되는지 확인한다.
+```shell
+./bin/kafka-console-producer.sh --broker-list test-broker01:9092,test-broker02:9092,test-broker03:9092 \
+  --topic test
+> This is a message
+> This is another message
+
+./bin/kafka-console-consumer.sh --bootstrap-server test-broker01:9092,test-broker02:9092,test-broker03:9092 \
+  --topic test --from-beginning
+This is a message
+This is another message
+````
+
+정상적으로 처리되는것을 확인할 수 있다!
+
+<br>
+
+---
 ## kafka 클러스터 local에 구축
 1. kafka download를 구글에 검색하여 원하는 Kafka버전을 다운로드 한다.
 2. 다운로드 받은 내용에 보면 bin, config 디렉토리가 있는데 각각 <br>
