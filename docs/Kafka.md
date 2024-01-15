@@ -184,80 +184,137 @@ Message Broker에서는 subscribe한 메시지를 저장하기 힘들다.
 테스트 목적의 머신이므로 Amazon Linux 2 AMI(Amazon Machine Image)를 t2.micro로 발급받습니다.<br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/7264148b-d466-41d1-b76d-0571030bf92d" width="60%"/><br>
 
-2. **각 서버 접속 후 wget 명령어로 Zookeeper 설치**<br>
-이제 실질적인 애플리케이션 설치 및 실행을 하도록 한다. 여기부터는 3개의 인스턴스(노드)에 모두 동일하게 진행하면 된다.<br>
+    1-1. **Mac OS 터미널을 이용한 EC2 접속**<br>
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/fe927681-5a33-4450-868e-602e50b4785b" width="60%"/><br>
+   AWS의 EC2 인스턴스 페이지에서 1개의 인스턴스 클릭 후 연결 클릭
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/7128340e-e2ac-4ef6-b250-ec8ca65c5252" width="60%"/><br>
+   인스턴스 액세스 방법 3번 아래의 명령어 복사 -> EC2 접속
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/c2605b1e-70bf-4a82-8e65-cdcdeefcf93a" width="60%"/><br>
+   yes 입력 후 해당 창이 뜨면 접속 성공
 
-zookeeper 설치를 위해 아래 명령어로 zookeeper 3.4.12 압축파일을 다운받아 준다,
-```shell
-wget https://downloads.apache.org/zookeeper/zookeeper-3.7.2/apache-zookeeper-3.7.2-bin.tar.gz
-````
-다운받은 zookeeper 압축파일은 아래 명령어로 풀어준다.
-```shell
-tar xvf -apache-zookeeper-3.7.2-bin.tar.gz
-````
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/3bc9c4f1-3d51-4b9d-8707-6171408cf4d3" width="40%"/><br>
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/c2605b1e-70bf-4a82-8e65-cdcdeefcf93a" width="60%"/><br>
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/8e2e4a4f-cbc1-4055-8586-e57c6058e03f" width="60%"/><br>
-
-이제 zookeeper의 configuration을 설정해야 한다.<br>
-zookeeper폴더내부의 conf폴더에 zoo.cfg파일을 생성하여 아래와 같이 configuration을 넣어준다.<br>
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/946c0d78-a90a-4ec4-ac74-2ad66cd52c32" width="60%"/><br>
-
-```groovy
-  tickTime=2000
-  dataDir=/var/lib/zookeeper
-  clientPort=2181
-  initLimit=20
-  syncLimit=5
-  server.1=test-broker01:2888:3888
-  server.2=test-broker02:2888:3888
-  server.3=test-broker03:2888:3888
-```  
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/0554cdfa-e0c9-4251-8315-b126d5eba83f" width="60%"/><br>
-
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/bdb5e7d1-b67b-4fce-b7b4-bcf4129562d5" width="60%"/><br>
+    root 계정으로 접속<br>
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/80d7a013-e8f7-4903-ac37-ad172cfdefd1" width="60%"/><br>
+    hostname 변경 (ex. test-broker01)<br>
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/efd5b400-eb7f-4fda-b3c7-715f003e4eb6" width="60%"/><br>
+ 
 
 <br>
 
-이제 zookeeper 앙상블을 만들기 위해 각 zookeeper마다 myid라는 파일을 만들어줘야 한다.<br> 
-myid의 위치는 /var/lib/zookeeper/myid 이고, 해당 파일에는 숫자를 하나 넣으면 된다.<br> 
-test-broker01은 1, test-broker02는 2, test-broker03은 3 으로 지정한다.
-```shell
-// 만약 test-broker01에서 실행한 경우 1이 나와야함
-cat /var/lib/zookeeper/myid
-```
-이제 zookeeper을 실행한다.
-```shell
-./bin/zkServer.sh start
-ZooKeeper JMX enabled by default
-Using config: /home/ec2-user/zookeeper-3.7.2/bin/../conf/zoo.cfg
-Strating zookeeper ... STARTED
-```
+2. **방화벽 설정 및 /etc/hosts 설정**<br>
+    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/5227519b-0757-4435-a581-c0575a1a2433" width="60%"/><br>
+    zookeeper와 카프카 클러스터가 각각 통신을 하기 위해서는 아래와 같이 inbound규칙을 추가해야 한다.<br> 
+    기본적으로 aws ec2를 발급받은 뒤 security group의 기본설정은 outbound에 대해 anywere로 open되어 있으므로 inbound만 추가해 준다.<br> 
+    추가해야할 port는 아래와 같다. 각 port는 anywhere 기준으로 열도록 한다.
 
-3. **방화벽 설정 및 /etc/hosts 설정**<br>
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/5227519b-0757-4435-a581-c0575a1a2433" width="60%"/><br>
-zookeeper와 카프카 클러스터가 각각 통신을 하기 위해서는 아래와 같이 inbound규칙을 추가해야 한다.<br> 
-기본적으로 aws ec2를 발급받은 뒤 security group의 기본설정은 outbound에 대해 anywere로 open되어 있으므로 inbound만 추가해 준다.<br> 
-추가해야할 port는 아래와 같다. 각 port는 anywhere 기준으로 열도록 한다.
+    ```groovy
+    // 만약 test-broker01인 경우
+    0.0.0.0 test-broker01
+    14.252.123.4 test-broker02
+    55.231.124.1 test-broker03
+    ```
+    > 기본적으로 SSH 22번 포트만 설정되어 있다.
 
-테스트의 편의를 위해 이번에 만든 3개의 인스턴스의 이름은 test-broker01, 02, 03로 지정하여 진행한다.<br> 
-이를 위해 각 host별로 /etc/hosts를 설정해줘야 하는데, 자기자신의 host는 0.0.0.0으로 설정하고 나머지 host는 ip로 할당되록 설정해 준다.
-```groovy
-// 만약 test-broker01인 경우
-0.0.0.0 test-broker01
-14.252.123.4 test-broker02
-55.231.124.1 test-broker03
-```
+   각자의 `/etc/hosts` 파일을 편집해 이름 지정<br>
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/1a4bb10d-3143-4718-9f33-251bbea1991f" width="60%"/><br>
+   테스트의 편의를 위해 이번에 만든 3개의 인스턴스의 이름은 test-broker01, 02, 03으로 지정하여 진행한다.<br>
+   자기자신의 host는 0.0.0.0으로 설정하고 나머지 host는 ip로 할당되도록 설정해 준다.
 
-> 기본적으로 SSH 22번 포트만 설정되어 있다. 
+<br>
+
+3. **각 서버 접속 후 wget 명령어로 Zookeeper 설치**<br>
+이제 실질적인 애플리케이션 설치 및 실행을 하도록 한다. 여기부터는 3개의 인스턴스(노드)에 모두 동일하게 진행하면 된다.<br>
+
+    zookeeper 설치를 위해 아래 명령어로 zookeeper 3.4.12 압축파일을 다운받아 준다,
+    ```shell
+    wget https://downloads.apache.org/zookeeper/zookeeper-3.7.2/apache-zookeeper-3.7.2-bin.tar.gz
+    ````
+    다운받은 zookeeper 압축파일은 아래 명령어로 풀어준다.
+    ```shell
+    tar xvf apache-zookeeper-3.7.2-bin.tar.gz
+    ````
+
+    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/8e2e4a4f-cbc1-4055-8586-e57c6058e03f" width="60%"/><br>
+
+    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/6ffcee8d-455e-4c13-844a-cd71f5895258" width="60%"/><br>
+   이제 zookeeper의 configuration을 설정해야 한다.<br>
+   zookeeper폴더내부의 conf폴더에 zoo.cfg파일을 생성하여 아래와 같이 configuration을 넣어준다.<br>
+    ```shell
+   vi zoo.cfg
+   ```
+    zoo.cfg 파일 생성<br>
+    (vi 명령어는 기본적으로 파일의 내용을 편집하는 것)<br>
+    (파일이 존재하지 않을 경우 파일을 생성하여 편집창을 띄운다)
+
+    ```groovy
+    tickTime=2000
+    dataDir=/var/lib/zookeeper
+    clientPort=2181
+    initLimit=20
+    syncLimit=5
+    server.1=test-broker01:2888:3888
+    server.2=test-broker02:2888:3888
+    server.3=test-broker03:2888:3888
+    ```  
+    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/8affdac9-3e5d-49d1-be5a-91d0ceae41c9" width="60%"/><br>
+
+   - tickTime
+     - 기준 시간 (현재 2초)
+   - dataDir
+     - zookeeper의 상태, 로그 등을 저장하는 디렉토리 위치 지정
+   - clientPort
+     - client 의 연결을 감지하는 port
+   - initLimit
+     - follower 가 leader와 처음 연결을 시도할 때 가지는 tick 횟수. 제한 횟수 넘으면 timeout<br>
+       (현재 40초로 설정) (tickTime * initLimit)
+   - syncLimit
+     - follower 가 leader와 연결 된 후에 앙상블 안에서 leader와의 연결을 유지하기 위한 tick 횟수
+     - 제한 횟수 넘으면 time out
+     - (현재 10초로 설정) (tickTime * syncLimit)
+     - server.(zookeeper_server.pid의 내용)=(host name 이나 host ip):2888:3888
+   - 앙상블을 이루기 위한 서버의 정보
+     - 2888은 동기화를 위한 포트, 3888은 클러스터 구성시 leader를 산출하기 위한 포트
+     - 여기서 서버의 id 를 dataDir 에 설정해 줘야 한다.
+     - (서버id 설정 경로 : /var/lib/zookeeper 의 zookeeper_server.pid 파일)
+
+    <br>
+
+    이제 zookeeper 앙상블을 만들기 위해 각 zookeeper마다 myid라는 파일을 만들어줘야 한다.<br> 
+    myid의 위치는 `/var/lib/zookeeper/myid` 이고, 해당 파일에는 숫자를 하나 넣으면 된다.<br> 
+    test-broker01은 1, test-broker02는 2, test-broker03은 3 으로 지정한다.
+    ```shell
+    // 만약 test-broker01에서 실행한 경우 1이 나와야함
+    cat /var/lib/zookeeper/myid
+    ```
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/1d3b1bde-c09b-45ff-a835-6e52534d9f9f" width="60%"/><br>
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/35514307-5add-454d-8e65-43142e1f9ef0" width="60%"/><br>
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/b3aeaaf6-344c-457e-aae0-9da9103a89cd" width="60%"/><br>
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/375bcbbe-c6ca-448d-b5e5-e42664f7bee4" width="60%"/><br>
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/1832e311-caf7-48fb-8f24-74971189e044" width="60%"/><br>    
+    
+    <br>
+    
+   OpenJDK 설치
+    ```shell
+   yum install java-1.8.0-openjdk-devel.x86_64
+   ```
+    이제 zookeeper을 실행한다.
+    ```shell
+    ./bin/zkServer.sh start
+    ZooKeeper JMX enabled by default
+    Using config: /home/ec2-user/zookeeper-3.7.2/bin/../conf/zoo.cfg
+    Strating zookeeper ... STARTED
+    ```
+
 
 4. **Kafka 설치**
 zookeeper가 설치완료되었으니 이제 kafka를 다운받고 실행하겠습니다. 이번에 다운받아서 테스트할 버젼은 2.1.0입니다.
 ```shell
-wget https://archive.apache.org/dist/kafka/2.1.0/kafka_2.11-2.1.0.tgz
+wget https://archive.apache.org/dist/kafka/2.6.0/kafka_2.12-2.6.0.tgz
 ```
 마찬가지로 아래 명령어를 통해 압축을 풀어준다,
 ```shell
-tar xvf kafka_2.11-2.1.0.tgz
+tar xvf kafka_2.12-2.6.0.tgz
 ````
 kafka실행을 위해서 broker.id 설정, zookeeper에 대한 설정과 listener설정을 아래와 같이 설정한다.<br> 
 대상 파일은 kafka 폴더 내부에 config/server.properties 이다.
