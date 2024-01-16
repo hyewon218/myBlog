@@ -26,19 +26,20 @@ public class KafkaProducerConfig {
     @Value("${kafka.producer.acksConfig}")
     private String acksConfig;
 
-    @Bean
-    public ProducerFactory<String, NotificationEvent> producerFactory() {
-        Map<String, Object> configProps = producerFactoryConfig();
-        return new DefaultKafkaProducerFactory<>(configProps);
-    }
-
     private Map<String, Object> producerFactoryConfig() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.ACKS_CONFIG, acksConfig);
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        // KEY 는 메세지를 보내면 토픽의 파티션이 지정될 때 쓰인다.
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return configProps;
+    }
+
+    @Bean
+    public ProducerFactory<String, NotificationEvent> producerFactory() {
+        Map<String, Object> configProps = producerFactoryConfig();
+        return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean
