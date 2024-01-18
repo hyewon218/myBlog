@@ -2,17 +2,17 @@ package com.sparta.myblog.service;
 
 
 import com.sparta.myblog.Image.config.AwsS3upload;
-import com.sparta.myblog.Image.entity.Image;
-import com.sparta.myblog.Image.repository.ImageRepository;
 import com.sparta.myblog.dto.ChatRoomListResponseDto;
 import com.sparta.myblog.dto.ChatRoomRequestDto;
 import com.sparta.myblog.dto.ChatRoomResponseDto;
 import com.sparta.myblog.entity.ChatRoom;
+import com.sparta.myblog.entity.Image;
 import com.sparta.myblog.entity.User;
 import com.sparta.myblog.exception.BusinessException;
 import com.sparta.myblog.exception.ErrorCode;
 import com.sparta.myblog.repository.ChatRoomRedisRepository;
 import com.sparta.myblog.repository.ChatRoomRepository;
+import com.sparta.myblog.repository.ImageRepository;
 import com.sparta.myblog.security.UserDetailsImpl;
 import java.io.IOException;
 import java.util.List;

@@ -1,7 +1,6 @@
 package com.sparta.myblog.repository;
 
-
-import com.sparta.myblog.entity.redishash.RefreshToken;
+import com.sparta.myblog.redis.redishash.RefreshToken;
 import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 

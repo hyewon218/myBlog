@@ -1,19 +1,26 @@
 package com.sparta.myblog.entity;
 
 import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.*;
 
 import java.util.List;
 
 @Getter
 @Entity
-@Table(name = "comment")
+@Table(name = "comment", uniqueConstraints = {
+    @UniqueConstraint(name = "API_ID_UNIQUE", columnNames = {"apiId"})
+})
 public class Comment extends BaseEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "comment_id")
   private long commentId;
+
+  @Builder.Default
+  @Column(nullable = false, updatable = false, length = 50)
+  private final String apiId = UUID.randomUUID().toString();
 
   @Column(name = "content", nullable = false)
   private String content;
@@ -39,9 +46,11 @@ public class Comment extends BaseEntity {
   public void setImageUrl(String imageUrl) {
     this.imageUrl = imageUrl;
   }
+
   public void setPost(Post post) {
     this.post = post;
   }
+
   public void setUser(User user) {
     this.user = user;
   }

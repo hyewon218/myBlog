@@ -1,15 +1,14 @@
 <!DOCTYPE HTML>
 <html lang="ko" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport"
-		  content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-	<meta http-equiv="X-UA-Compatible" content="ie=edge">
-	<link rel="preconnect" href="https://fonts.gstatic.com">
-    <link rel="stylesheet" type="text/css" href="/css/signup_login.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" type="text/css" href="/css/signup_login.css"/>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"
             integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <meta charset="UTF-8">
     <title>회원가입, 로그인 페이지</title>
 </head>
@@ -18,24 +17,21 @@
 <div class="wrapper">
     <div class="container">
         <div class="sign-up-container">
-			<form action="/api/user/signup" method="post">
+            <!-- <form action="/view/user/signup" method="post">-->
+            <form th:action method="post" enctype="multipart/form-data">
                 <h1>회원가입</h1>
                 <div class="social-links">
                     <div>
                         <a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a>
                     </div>
-                    <div>
-                        <a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a>
-                    </div>
-                    <div>
-                        <a href="#"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
-                    </div>
                 </div>
-                <span>or use your email for registration</span>
-                <input type="text" name="username" placeholder="Name">
-                <input type="email" name="email" placeholder="Email">
-                <input type="password" name="password" placeholder="Password">
-                <button class="form_btn">회원가입</button>
+                <input type="text" name="username" placeholder="아이디">
+                <input type="email" name="email" placeholder="이메일">
+                <input type="password" name="password" placeholder="비밀번호">
+                <input type="text" name="selfText" placeholder="자기소개">
+                <input type="file" name="imageFile" class="login-input-box"
+                       accept="image/gif,image/jpeg,image/jpg,image/png">
+                <input type="submit" class="form_btn" value="회원가입">
             </form>
         </div>
         <div class="sign-in-container">
@@ -45,17 +41,10 @@
                     <div>
                         <a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a>
                     </div>
-                    <div>
-                        <a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a>
-                    </div>
-                    <div>
-                        <a href="#"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
-                    </div>
                 </div>
-                <span>or use your account</span>
                 <input type="text" name="username" id="username" placeholder="Username">
                 <input type="password" name="password" id="password" placeholder="Password">
-                <!--onclick 안 먹는 문제 : return false; 추가-->
+                <!--TODO :  onclick 안 먹는 문제 : return false; 추가-->
                 <button class="form_btn" onclick="onLogin();return false;">로그인</button>
             </form>
         </div>
@@ -74,20 +63,14 @@
     </div>
 </div>
 </body>
-<script src="/js/signup_login.js"></script>
+<script src="/js/signup_login.js" type="text/javascript"></script>
 <script>
-    $(document).ready(function () {
-        // 토큰 삭제
-        Cookies.remove('Authorization', {path: '/'});
-    });
-
     const href = location.href;
     const queryString = href.substring(href.indexOf("?") + 1)
-    if (queryString === 'error') {
-        const errorDiv = document.getElementById('login-failed');
-        errorDiv.style.display = 'block';
-    }
-
+    /*    if (queryString === 'error') {
+            const errorDiv = document.getElementById('login-failed');
+            errorDiv.style.display = 'block';
+        }*/
     const host = 'http://' + window.location.host;
 
     function onLogin() {
@@ -96,26 +79,18 @@
 
         $.ajax({
             type: "POST",
-            url: `/api/user/login`,
+            url: `/view/user/login`,
             contentType: "application/json",
             data: JSON.stringify({username: username, password: password}),
         })
-            .done(function (res, status, xhr) {
-                const token = xhr.getResponseHeader('Authorization');
-
-                Cookies.set('Authorization', token, {path: '/'})
-
-                $.ajaxPrefilter(function (options, originalOptions, jqXHR) {
-                    jqXHR.setRequestHeader('Authorization', token);
-                });
-
-                window.location.href = host;
-                alert("로그인 완료");
-            })
-            .fail(function (jqXHR, textStatus) {
-                alert("Login Fail");
-                window.location.href = host + '/api/user/login-page?error'
-            });
+        .done(function () {
+            window.location.href = host;
+            alert("로그인 성공");
+        })
+        .fail(function (jqXHR, textStatus) {
+            alert("Login Fail");
+            window.location.href = host + '/view/user/login-page?error'
+        });
     }
 </script>
 </html>

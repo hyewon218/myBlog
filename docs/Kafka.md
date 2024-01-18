@@ -63,8 +63,8 @@
 > Message는 순차적으로 Queue에 들어오게 되고,<br>
 > Queue는 순차적으로 들어오는 Message를 받아서 갖고 있다가 하나하나 순서에 맞게 전달한다.
 
-- **record**에 포함된 메세지 키 또는 메세지 값에 따라서 partition의 위치가 결정된다.
-  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/a833a9c2-d5d5-4138-b958-ff0ba3ddf2e2" width="30%"/> <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2e0c6600-8efb-429d-a81c-8c96ae2d17d9" width="30%"/><br>
+- **record**에 포함된 메세지 키 또는 메세지 값에 따라서 partition의 위치가 결정된다.<br>
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/a833a9c2-d5d5-4138-b958-ff0ba3ddf2e2" width="20%"/> <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2e0c6600-8efb-429d-a81c-8c96ae2d17d9" width="20%"/><br>
 - 동일한 메세지 키를 가진 record들은 동일한 partition에 들어가기 때문에 순서를 지켜서 데이터를 처리할 수 있다는 장점이 있다.
 - **Partition 하나 당 consumer가 하나 붙어서 소비**할 수 있고 Partition 개수 만큼 Consumer를 생성하면 **병렬 처리가 가능**하기 때문에 **성능을 늘리는 데 활용**할 수 있다.
 - Partition은 늘릴 수는 있지만 줄일 수 없기 때문에 **Partition 개수를 늘리는 것에 신중해야 한다**.
@@ -186,9 +186,9 @@
 
    1-1. **Mac OS 터미널을 이용한 EC2 접속**<br>
    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/fe927681-5a33-4450-868e-602e50b4785b" width="60%"/><br>
-   AWS의 EC2 인스턴스 페이지에서 1개의 인스턴스 클릭 후 연결 클릭
+   AWS의 EC2 인스턴스 페이지에서 1개의 인스턴스 클릭 후 연결 클릭<br>
    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/7128340e-e2ac-4ef6-b250-ec8ca65c5252" width="60%"/><br>
-   인스턴스 액세스 방법 3번 아래의 명령어 복사 -> EC2 접속
+   인스턴스 액세스 방법 3번 아래의 명령어 복사 -> EC2 접속<br>
    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/c2605b1e-70bf-4a82-8e65-cdcdeefcf93a" width="60%"/><br>
    yes 입력 후 해당 창이 뜨면 접속 성공
 
@@ -288,13 +288,17 @@
     ```
    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/1d3b1bde-c09b-45ff-a835-6e52534d9f9f" width="60%"/><br>
    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/35514307-5add-454d-8e65-43142e1f9ef0" width="60%"/><br>
-   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/b3aeaaf6-344c-457e-aae0-9da9103a89cd" width="60%"/><br>
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/b3aeaaf6-344c-457e-aae0-9da9103a89cd" width="30%"/><br>
+   ```shell
+   // 만약 test-broker01에서 실행한 경우 1이 나와야함
+   cat /var/lib/zookeeper/zookeeper_server.pid
+    ```
    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/375bcbbe-c6ca-448d-b5e5-e42664f7bee4" width="60%"/><br>
-   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/1832e311-caf7-48fb-8f24-74971189e044" width="60%"/><br>
+    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/1832e311-caf7-48fb-8f24-74971189e044" width="60%"/><br>
 
     <br>
 
-   OpenJDK 설치
+   **OpenJDK 설치**
     ```shell
    yum install java-1.8.0-openjdk-devel.x86_64
    ```

@@ -1,4 +1,4 @@
-package com.sparta.myblog.file;
+package com.sparta.myblog.config;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;

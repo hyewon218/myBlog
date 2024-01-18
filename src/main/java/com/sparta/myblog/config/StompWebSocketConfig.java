@@ -1,4 +1,4 @@
-package com.sparta.myblog.chat.config;
+package com.sparta.myblog.config;
 
 import com.sparta.myblog.chat.StompHandler;
 import lombok.RequiredArgsConstructor;

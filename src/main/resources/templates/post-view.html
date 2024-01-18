@@ -14,7 +14,7 @@
     <nav class="links">
       <ul>
         <li><a href="#">프로필</a></li>
-        <li><a href="#">로그아웃</a></li>
+        <li><a href="javascript:logout()">로그아웃</a></li>
       </ul>
     </nav>
   </nav>
@@ -43,7 +43,7 @@
                 <h6 style="text-align: left">댓글</h6>
                 <div class="input-group mb-3">
                   <div style="text-align: left">
-                    <img th:src="${user.profileImage}" width="50" height="50"
+                    <img th:src="${user.imageUrl}" width="50" height="50"
                          id="commentImage"/>
                     <input type="text" id="comment" name="comment" style="width: 375px">
                   </div>
@@ -104,6 +104,12 @@
         alert("실패")
       }
     });
+  }
+
+  function logout() {
+    // 토큰 삭제
+    Cookies.remove('Authorization', {path: '/'});
+    window.location.href = host + '/api/user/login-page';
   }
 </script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>

@@ -11,6 +11,8 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -26,6 +28,12 @@ public class StompHandler implements ChannelInterceptor {
     private final JwtUtil jwtUtil; // jwt 토큰 인증 핸들러
     private final ChatRoomRedisRepository chatRoomRedisRepository;
 
+    @Autowired
+    public StompHandler(@Lazy ChatRoomRedisRepository chatRoomRedisRepository, JwtUtil jwtUtil) {
+        this.chatRoomRedisRepository = chatRoomRedisRepository;
+        this.jwtUtil = jwtUtil;
+    }
+
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         // 헤더에 있는 토큰값을 가져오기 위해 StompHeaderAccessor.wrap()
@@ -37,9 +45,10 @@ public class StompHandler implements ChannelInterceptor {
             String jwt = accessor.getFirstNativeHeader("Authorization");
             log.info("jwt!!!!!!!!!" + jwt);
 
+            // %20 띄어쓰기로 디코딩
             if (!jwtUtil.validateToken((URLDecoder.decode(Objects.requireNonNull(jwt),
-                        StandardCharsets.UTF_8))
-                    .substring(7))) {
+                StandardCharsets.UTF_8))
+                .substring(7))) {
                 throw new IllegalArgumentException("에러");
             }
         } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) { // 채팅룸 구독요청
@@ -61,7 +70,7 @@ public class StompHandler implements ChannelInterceptor {
                     .build());
             log.info("SUBSCRIBED {}, {}", name, roomId);
 
-            // Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
+            // 📍Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
             chatRoomRedisRepository.enterChatRoom(roomId);
         }
         return message;
@@ -70,6 +79,7 @@ public class StompHandler implements ChannelInterceptor {
     public void sendEnterMessage(ChatMessageDto messageDto) {
         if (ChatType.ENTER.equals(messageDto.getType())) {
             messageDto.setMessage(messageDto.getSender() + "님이 입장하셨습니다.");
+
             log.info(messageDto.getType());
         }
     }
