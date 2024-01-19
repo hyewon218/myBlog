@@ -1,9 +1,10 @@
 package com.sparta.myblog.controller;
 
 import com.sparta.myblog.dto.ChatMessageDto;
-import com.sparta.myblog.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -16,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/api")
 public class ChatController {
 
-    private final ChatService chatService;
+    //private final ChatService chatService;
+    private final KafkaTemplate<String, ChatMessageDto> kafkaTemplate;
+    private final NewTopic topic;
 
     // stompConfig 에서 설정한 applicationDestinationPrefixes 와 @MessageMapping 경로가 병합됨 (/pub + ...)
     // /pub/chat/message 에 메세지가 오면 동작
@@ -27,7 +30,8 @@ public class ChatController {
     // HTTP Method 매핑의 경우 Parameter 값을 받아오기 위해서 @PathVariable을 사용하였지만, 메세징의 경우 @DestinationVariable을 사용
     public ChatMessageDto message(@DestinationVariable String roomId, ChatMessageDto messageDto) {
 
-        chatService.sendChatMessage(roomId, messageDto);
+        //chatService.sendChatMessage(roomId, messageDto);
+        kafkaTemplate.send(topic.name(), messageDto);
 
         return ChatMessageDto.builder()
             .roomId(roomId)
