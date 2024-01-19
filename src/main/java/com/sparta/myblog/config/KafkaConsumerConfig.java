@@ -1,5 +1,7 @@
 package com.sparta.myblog.config;
 
+import com.sparta.myblog.dto.ChatMessageDto;
+import com.sparta.myblog.kafka.NotificationEvent;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -23,25 +25,95 @@ public class KafkaConsumerConfig {
     @Value("${kafka.consumer.autoOffsetResetConfig}")
     private String autoOffsetResetConfig;
 
-    @Value("${kafka.consumer.alarm.group-id}")
-    private String groupId;
+    @Value("${kafka.consumer.alarm.rdb-group-id}")
+    private String rdbGroupId;
 
+    @Value("${kafka.consumer.alarm.redis-group-id}")
+    private String redisGroupId;
+
+    @Value("${kafka.consumer.chat.rdb-group-id}")
+    private String rdbChatGroupId;
+
+    @Value("${kafka.consumer.chat.redis-group-id}")
+    private String redisChatGroupId;
+
+    // 알람
     @Bean
-    public ConsumerFactory<String, String> consumerFactory() {
+    public ConsumerFactory<String, NotificationEvent> notificationRDBConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, rdbGroupId);
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetResetConfig);
-        return new DefaultKafkaConsumerFactory<>(props);
+        return new DefaultKafkaConsumerFactory<>(props,
+            new StringDeserializer(),
+            new JsonDeserializer<>(NotificationEvent.class));
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, String> factory =
+    public ConsumerFactory<String, NotificationEvent> notificationRedisConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, redisGroupId);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetResetConfig);
+        return new DefaultKafkaConsumerFactory<>(props,
+            new StringDeserializer(),
+            new JsonDeserializer<>(NotificationEvent.class));
+    }
+
+    // 채팅
+    @Bean
+    public ConsumerFactory<String, ChatMessageDto> chatRDBConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, rdbChatGroupId);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetResetConfig);
+        return new DefaultKafkaConsumerFactory<>(props,
+            new StringDeserializer(),
+            new JsonDeserializer<>(ChatMessageDto.class));
+    }
+
+    @Bean
+    public ConsumerFactory<String, ChatMessageDto> chatRedisConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, redisChatGroupId);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetResetConfig);
+        return new DefaultKafkaConsumerFactory<>(props,
+            new StringDeserializer(),
+            new JsonDeserializer<>(ChatMessageDto.class));
+    }
+
+    // 알람
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> kafkaListenerContainerFactoryRDB() {
+        ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> factory =
             new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
+        factory.setConsumerFactory(notificationRDBConsumerFactory());
+        return factory;
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> kafkaListenerContainerFactoryRedis() {
+        ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> factory =
+            new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(notificationRedisConsumerFactory());
+        return factory;
+    }
+
+    // 채팅
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, ChatMessageDto> kafkaListenerContainerFactoryChatRDB() {
+        ConcurrentKafkaListenerContainerFactory<String, ChatMessageDto> factory =
+            new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(chatRDBConsumerFactory());
+        return factory;
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, ChatMessageDto> kafkaListenerContainerFactoryChatRedis() {
+        ConcurrentKafkaListenerContainerFactory<String, ChatMessageDto> factory =
+            new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(chatRedisConsumerFactory());
         return factory;
     }
 }
