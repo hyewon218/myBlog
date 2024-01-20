@@ -22,7 +22,7 @@ public class NotificationConsumer {
      */
     @KafkaListener(topics = "${kafka.topic.alarm.name}", groupId = "${kafka.consumer.alarm.rdb-group-id}",
         properties = {AUTO_OFFSET_RESET_CONFIG
-            + ":earliest"}, containerFactory = "kafkaListenerContainerFactoryRDB")
+            + ":earliest"}, containerFactory = "kafkaListenerContainerFactoryRDB") // containerFactory는 config 파일에서 설정한 bean
     public void createAlarmInRDBConsumerGroup(NotificationEvent alarmEvent, Acknowledgment ack) {
         log.info("createAlarmInRDBConsumerGroup");
         notificationService.createNotification(alarmEvent.getUserId(), alarmEvent.getType(),

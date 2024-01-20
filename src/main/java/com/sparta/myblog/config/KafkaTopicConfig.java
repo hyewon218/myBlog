@@ -16,7 +16,9 @@ public class KafkaTopicConfig {
     private String bootstrapAddress;
 
     @Value("${kafka.topic.alarm.name}")
-    private String topicName;
+    private String topicNotificationName;
+    @Value("${kafka.topic.chat.name}")
+    private String topicChatName;
     @Value("${kafka.topic.alarm.numPartitions}")
     private String numPartitions;
     @Value("${kafka.topic.alarm.replicationFactor}")
@@ -35,7 +37,12 @@ public class KafkaTopicConfig {
      * 이보다 Partition 을 크게 설정한다고 해서 Consume 속도가 빨라지지 않기 때문이다.
      */
     @Bean
-    public NewTopic newTopic() {
-        return new NewTopic(topicName, Integer.parseInt(numPartitions), Short.parseShort(replicationFactor));
+    public NewTopic newNotificationTopic() {
+        return new NewTopic(topicNotificationName, Integer.parseInt(numPartitions), Short.parseShort(replicationFactor));
+    }
+
+    @Bean
+    public NewTopic newChatTopic() {
+        return new NewTopic(topicChatName, Integer.parseInt(numPartitions), Short.parseShort(replicationFactor));
     }
 }

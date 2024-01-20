@@ -1,5 +1,6 @@
 package com.sparta.myblog.config;
 
+import com.sparta.myblog.dto.ChatMessageDto;
 import com.sparta.myblog.kafka.NotificationEvent;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,7 @@ public class KafkaProducerConfig {
     @Value("${kafka.producer.acksConfig}")
     private String acksConfig;
 
+    /*TODO : 알람과 채팅 분리?*/
     private Map<String, Object> producerFactoryConfig() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.ACKS_CONFIG, acksConfig);
@@ -36,14 +38,27 @@ public class KafkaProducerConfig {
         return configProps;
     }
 
+    // 알람
     @Bean
-    public ProducerFactory<String, NotificationEvent> producerFactory() {
+    public ProducerFactory<String, NotificationEvent> producerNotificationFactory() {
         Map<String, Object> configProps = producerFactoryConfig();
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean
-    public KafkaTemplate<String, NotificationEvent> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+    public KafkaTemplate<String, NotificationEvent> kafkaNotificationTemplate() {
+        return new KafkaTemplate<>(producerNotificationFactory());
+    }
+
+
+    // 채팅
+    @Bean
+    public ProducerFactory<String, ChatMessageDto> producerChatFactory() {
+        Map<String, Object> configProps = producerFactoryConfig();
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+    @Bean
+    public KafkaTemplate<String, ChatMessageDto> kafkaChatTemplate() {// kafka에 데이터를 주고 받기 위한 template을 생성해준다. kafka는 key,value 형식의 저장소임으로 key는 String, value는 ChatDto 를 사용한다.
+        return new KafkaTemplate<>(producerChatFactory());// template을 실질적으로 생성해주는 producerFactory를 넣어준다.
     }
 }

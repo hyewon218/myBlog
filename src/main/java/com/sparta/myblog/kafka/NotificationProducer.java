@@ -2,7 +2,7 @@ package com.sparta.myblog.kafka;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -12,12 +12,10 @@ import org.springframework.stereotype.Component;
 public class NotificationProducer {
 
     private final KafkaTemplate<String, NotificationEvent> kafkaTemplate;
-
-    @Value("${kafka.topic.alarm.name}")
-    private String topicName;
+    private final NewTopic newNotificationTopic;
 
     public void send(NotificationEvent notificationEvent) {
-        kafkaTemplate.send(topicName, notificationEvent);
+        kafkaTemplate.send(newNotificationTopic.name(), notificationEvent);
         log.debug("alarm kafka produce");
     }
 }

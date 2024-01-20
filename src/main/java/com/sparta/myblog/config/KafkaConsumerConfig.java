@@ -26,10 +26,10 @@ public class KafkaConsumerConfig {
     private String autoOffsetResetConfig;
 
     @Value("${kafka.consumer.alarm.rdb-group-id}")
-    private String rdbGroupId;
+    private String rdbNotificationGroupId;
 
     @Value("${kafka.consumer.alarm.redis-group-id}")
-    private String redisGroupId;
+    private String redisNotificationGroupId;
 
     @Value("${kafka.consumer.chat.rdb-group-id}")
     private String rdbChatGroupId;
@@ -41,7 +41,7 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, NotificationEvent> notificationRDBConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, rdbGroupId);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, rdbNotificationGroupId);
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetResetConfig);
         return new DefaultKafkaConsumerFactory<>(props,
@@ -50,15 +50,32 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> kafkaListenerContainerFactoryRDB() {
+        ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> factory =
+            new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(notificationRDBConsumerFactory());
+        return factory;
+    }
+
+    @Bean
     public ConsumerFactory<String, NotificationEvent> notificationRedisConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, redisGroupId);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, redisNotificationGroupId);
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetResetConfig);
         return new DefaultKafkaConsumerFactory<>(props,
             new StringDeserializer(),
             new JsonDeserializer<>(NotificationEvent.class));
     }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> kafkaListenerContainerFactoryRedis() {
+        ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> factory =
+            new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(notificationRedisConsumerFactory());
+        return factory;
+    }
+
 
     // 채팅
     @Bean
@@ -73,40 +90,23 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConsumerFactory<String, ChatMessageDto> chatRedisConsumerFactory() {
+    // ConcurrentKafkaListenerContainerFactory : // 1개 이상의 consumerFactory 를 사용하는 multi thread
+    public ConcurrentKafkaListenerContainerFactory<String, ChatMessageDto> kafkaListenerContainerFactoryChatRDB() {
+        ConcurrentKafkaListenerContainerFactory<String, ChatMessageDto> factory =
+            new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(chatRDBConsumerFactory());
+        return factory;
+    }
+
+    @Bean
+    public ConsumerFactory<String, ChatMessageDto> chatRedisConsumerFactory() {// 소비자 consumer 의 설정 값을 설정하여 cunsumerFactory를 생성한다. containerFactory() 메소드와 동일하다.
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.GROUP_ID_CONFIG, redisChatGroupId);
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetResetConfig);
         return new DefaultKafkaConsumerFactory<>(props,
             new StringDeserializer(),
-            new JsonDeserializer<>(ChatMessageDto.class));
-    }
-
-    // 알람
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> kafkaListenerContainerFactoryRDB() {
-        ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> factory =
-            new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(notificationRDBConsumerFactory());
-        return factory;
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> kafkaListenerContainerFactoryRedis() {
-        ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> factory =
-            new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(notificationRedisConsumerFactory());
-        return factory;
-    }
-
-    // 채팅
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, ChatMessageDto> kafkaListenerContainerFactoryChatRDB() {
-        ConcurrentKafkaListenerContainerFactory<String, ChatMessageDto> factory =
-            new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(chatRDBConsumerFactory());
-        return factory;
+            new JsonDeserializer<>(ChatMessageDto.class));// 역직렬화 할 value 값이 object 이기 때문에 직접 주입해줘야 오류가 발생하지 않는다.
     }
 
     @Bean

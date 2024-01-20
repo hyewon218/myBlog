@@ -19,9 +19,10 @@ public class ChatConsumer {
     private final ChatServiceImpl chatService;
 
     // 저장
+    // @KafkaListener : topic, groupId, containerFactory 세 개의 값을 통해 카프카로부터 값을 가져올 수 있다.
     @KafkaListener(topics = "${kafka.topic.chat.name}", groupId = "${kafka.consumer.chat.rdb-group-id}",
         properties = {AUTO_OFFSET_RESET_CONFIG
-            + ":earliest"}, containerFactory = "kafkaListenerContainerFactoryChatRDB")
+            + ":earliest"}, containerFactory = "kafkaListenerContainerFactoryChatRDB") // containerFactory는 config 파일에서 설정한 bean
     public void createChatInRDBConsumerGroup(ChatMessageDto chatMessageDto) {
         log.info("createAlarmInRDBConsumerGroup");
         chatService.saveMessage(chatMessageDto.getRoomId(), chatMessageDto);
