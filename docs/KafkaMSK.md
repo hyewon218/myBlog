@@ -66,7 +66,7 @@ AWS의 추천 설정 방식으로 클러스터를 생성할 경우 5개 설정<b
 3개의 AZ에 MSK 클러스터를 구축하기 위해서 `VPC`와 `서브넷`을 생성하는 방법을 알아보자.<br>
 서브넷을 생성하기 전에 우선 VPC를 생성해야 한다. AWS 웹 콘솔에서 VPC탭으로 이동하여 VPC 생성을 클릭하여 VPC 생성을 진행할 수 있다.<br>
 
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/8a6caa60-85d9-45d7-80f9-0cc494cd0f52" width="100%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/c098336d-3ccd-4011-b210-1ebca594b6fd" width="100%"/><br>
 VPC는 특정 리전에서 생성되며 네트워크 대역을 설정할 수 있다. VPC의 네트워크 대역은 `CIDR`로 설정된다.<br> 
 예를 들어, IPV4 CIDR 블록 1.1.0.0/16으로 생성된 VPC는 1.1.0.0부터 1.1.255.255까지 총 65,536개의 프라이빗 IP를 가진 네트워크 대역을 사용할 수 있다.
 
@@ -75,27 +75,40 @@ IPV4 블록 크기는 /16- /28 넷마스크이어야 하며, VPC와 동일한 �
 IPV4 CIDR 블록은 /64 CIDR 블록이어야 합니다.
 
 
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/4ed250a6-d9c3-4934-b1f8-e12a9a19be72" width="30%"/><br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/a1735f8a-fd1f-41d0-b87d-cada43b52188" width="60%"/><br>
 DNS 호스트 이름을 활성화하면 VPC 내부의 퍼블릭 서브넷에서 생성된 EC2는 퍼블릭 IP와 퍼블릭 DNS 호스트 이름을 가지게 된다.
 
 
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/7933e79e-6881-4eb0-9575-5240c2e95923" width="60%"/><br>
-다음은 서브넷을 생성할 차례다. 이번에 MSK로 생성할 클러스터는 **3개의 서브넷에 각각 브로커가 실행되도록** 설정할 것이다.<br> 
-3개의 서브넷에 브로커를 할당하기 위해서는 **VPC에 서브넷을 생성**해야 한다. 서브넷을 생성하기 위해 서브넷 탭으로 이동한다.<br> 
-서브넷 생성을 클릭하면 신규 서브넷을 생성할 수 있다.
-
-VPC에 속한 서브넷 3개의 생성을 진행한다.<br> 
-서브넷을 생성할 때는 이름 태그, VPC 선택, AZ(가용 영역) 선택, 서브넷을 위한 CIDR을 입력해야 한다.<br> 
-서브넷을 생성할 때는 VPC에 속하는 네트워크 대역으로 설정한다. 표 6.2.1.1-2를 참고하여 입력하고 생성을 진행 한다.
-
-생성을 완료하면 그림 6.2.1.1-15와 같이 개별 서브넷IID를 발급받았음을 확인할 수 있다.
+> VPC 생성하면서 서브넷도 생성됨<br>
+> <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/7933e79e-6881-4eb0-9575-5240c2e95923" width="60%"/><br>
+> 다음은 서브넷을 생성할 차례다. 이번에 MSK로 생성할 클러스터는 **3개의 서브넷에 각각 브로커가 실행되도록** 설정할 것이다.<br> 
+> 3개의 서브넷에 브로커를 할당하기 위해서는 **VPC에 서브넷을 생성**해야 한다. 서브넷을 생성하기 위해 서브넷 탭으로 이동한다.<br> 
+> 서브넷 생성을 클릭하면 신규 서브넷을 생성할 수 있다.
+> 
+> VPC에 속한 서브넷 3개의 생성을 진행한다.<br> 
+> 서브넷을 생성할 때는 이름 태그, VPC 선택, AZ(가용 영역) 선택, 서브넷을 위한 CIDR을 입력해야 한다.<br> 
+> 서브넷을 생성할 때는 VPC에 속하는 네트워크 대역으로 설정한다. 표 6.2.1.1-2를 참고하여 입력하고 생성을 진행 한다.
+> 
+> 생성을 완료하면 그림 6.2.1.1-15와 같이 개별 서브넷IID를 발급받았음을 확인할 수 있다.
 
 생성 완료된 서브넷ID는 MSK의 클러스터 생성 시 네트워크 설정에서 사용된다. 다시 MSK 클러스터 생성으로 돌아간다.<br>
-Nelworking 설정 영역에서 생성한 VPC를 msk-vpc- 1로 설 정하고 Number of Availability Zones는 3으로 설정한다.<br>
-총 3개의 AZ와 서브넷을 설정해 야 한다. 이미 생성한 mmsk-subnet-a, msk-subnetb, msk-subner-c를 각 AZ와 함께 입력 하여 그림 6.2.1.1-16과 같이 입력을 완료한다.
+Nelworking 설정 영역에서 생성한 VPC를 생성한 VPC로 설정하고 Number of Availability Zones는 **3**으로 설정한다.<br>
+총 3개의 AZ와 서브넷을 설정해야 한다. 이미 생성한 mmsk-subnet-a, msk-subnetb, msk-subner-c를 각 AZ와 함께 입력 하여 그림 6.2.1.1-16과 같이 입력을 완료한다.
 
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/fc908b6d-7da7-4c1d-9b64-6bac9453bf5d" width="60%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/f547b258-6e71-44cb-b15d-cf2733519758" width="40%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2ef0dd3f-d483-4290-90c0-e5ff9206c551" width="40%"/><br>
+
+#### MSK 클러스터 생성 완료
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/3f48bbae-f648-4137-962c-664bb89d7a0d" width="40%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/19ce6303-073c-4ebf-a2ae-f0a2983aff81" width="40%"/><br>
+
+라우팅테이블도 이미 만들어져있고, 서브넷과 연결이 되어있다. a까지 연결 완료
+
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/ffbadf30-d4b8-4917-9a08-23fa00c7d9a3" width="40%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/544e3956-a5bd-452e-9395-34428fb2f3ab" width="40%"/><br>
+
+
+
 
 <br>
 ---
