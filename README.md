@@ -8,3 +8,5 @@
 4. [Redis 정리](https://github.com/hyewon218/myBlog/blob/master/docs/Redis.md)
 5. [Redis pub/sub 정리](https://github.com/hyewon218/myBlog/blob/master/docs/RedisPubSub.md)
 6. [Kafka 정리](https://github.com/hyewon218/myBlog/blob/master/docs/Kafka.md)
+7. [Kafka MSK 정리](https://github.com/hyewon218/myBlog/blob/master/docs/KafkaMSK.md)
+8. [ElastiCache 정리](https://github.com/hyewon218/myBlog/blob/master/docs/ElastiCacheForRedis.md)
