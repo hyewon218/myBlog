@@ -5,7 +5,6 @@ import com.sparta.myblog.dto.ChatMessageDto;
 import com.sparta.myblog.entity.Chat;
 import com.sparta.myblog.entity.ChatRoom;
 import com.sparta.myblog.entity.ChatType;
-import com.sparta.myblog.redis.pubsub.RedisSubscriber;
 import com.sparta.myblog.repository.ChatRepository;
 import com.sparta.myblog.repository.ChatRoomRedisRepository;
 import com.sparta.myblog.repository.ChatRoomRepository;
@@ -13,7 +12,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +23,6 @@ public class ChatServiceImpl implements ChatService {
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomRedisRepository chatRoomRedisRepository;
-    private final RedisSubscriber redisSubscriber;
-    private final RedisMessageListenerContainer redisMessageListenerContainer;
 
     // 메세지 삭제 - DB Scheduler 적용 필요
 
@@ -37,12 +33,7 @@ public class ChatServiceImpl implements ChatService {
     public void sendChatMessage(String roomId, ChatMessageDto messageDto) {
         messageDto.setType(ChatType.TALK);
 
-        saveMessage(roomId, messageDto);
-
-        redisMessageListenerContainer.addMessageListener(redisSubscriber,
-            chatRoomRedisRepository.getTopic(roomId));
-
-        log.info("레디스 topic 확인 : "+chatRoomRedisRepository.getTopic(roomId));
+        log.info("레디스 topic 확인 : "+ chatRoomRedisRepository.getTopic(roomId));
 
         // 📍Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
         chatRoomRedisRepository.pushMessage(roomId, messageDto);
@@ -65,6 +56,7 @@ public class ChatServiceImpl implements ChatService {
     @Transactional(readOnly = true)
     @Cacheable(value = "chatListCache", key = "#roomId", cacheManager = "cacheManager")
     public ChatListResponseDto getAllChatByRoomId(String roomId) {
+        log.info("이 로그는 해당 key에 대한 캐시가 없는 경우 찍힙니다.");
         List<Chat> chatList = chatRepository.findAllByChatRoomIdOrderByCreatedAtAsc(roomId);
 
         return ChatListResponseDto.of(chatList);

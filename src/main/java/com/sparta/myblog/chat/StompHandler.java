@@ -70,7 +70,7 @@ public class StompHandler implements ChannelInterceptor {
                     .build());
             log.info("SUBSCRIBED {}, {}", name, roomId);
 
-            // 📍Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
+            // 📍채팅방 입장 (subscribe)
             chatRoomRedisRepository.enterChatRoom(roomId);
         }
         return message;

@@ -7,7 +7,6 @@ import com.sparta.myblog.service.ChatServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -15,28 +14,33 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ChatConsumer {
 
-    private final SimpMessageSendingOperations messagingTemplate;
     private final ChatServiceImpl chatService;
 
     // 저장
-    // @KafkaListener : topic, groupId, containerFactory 세 개의 값을 통해 카프카로부터 값을 가져올 수 있다.
-    @KafkaListener(topics = "${kafka.topic.chat.name}", groupId = "${kafka.consumer.chat.rdb-group-id}",
-        properties = {AUTO_OFFSET_RESET_CONFIG
-            + ":earliest"}, containerFactory = "kafkaListenerContainerFactoryChatRDB") // containerFactory는 config 파일에서 설정한 bean
+    // @KafkaListener : topic, groupId, containerFactory 세 개의 값을 통해 '카프카로부터' 값을 가져올 수 있다.
+    @KafkaListener(
+        topics = "${kafka.topic.chat.name}",
+        groupId = "${kafka.consumer.chat.rdb-group-id}",
+        properties = {AUTO_OFFSET_RESET_CONFIG + ":earliest"},
+        containerFactory = "kafkaListenerContainerFactoryChatRDB"
+    ) // containerFactory 는 config 파일에서 설정한 bean
     public void createChatInRDBConsumerGroup(ChatMessageDto chatMessageDto) {
-        log.info("createAlarmInRDBConsumerGroup");
+        log.info("createChatInRDBConsumerGroup");
         chatService.saveMessage(chatMessageDto.getRoomId(), chatMessageDto);
     }
 
     // 메세지 보냄
-    @KafkaListener(topics = "${kafka.topic.chat.name}", groupId = "${kafka.consumer.chat.redis-group-id}",
-        properties = {AUTO_OFFSET_RESET_CONFIG
-            + ":earliest"}, containerFactory = "kafkaListenerContainerFactoryChatRedis")
+    @KafkaListener(
+        topics = "${kafka.topic.chat.name}",
+        groupId = "${kafka.consumer.chat.redis-group-id}",
+        properties = {AUTO_OFFSET_RESET_CONFIG + ":earliest"},
+        containerFactory = "kafkaListenerContainerFactoryChatRedis"
+    )
     public void redisPublishConsumerGroup(ChatMessageDto chatMessageDto) {
         log.info("redisPublishChatConsumerGroup");
         try {
-            messagingTemplate.convertAndSend("/sub/chat/room/" + chatMessageDto.getRoomId(),
-                chatMessageDto); // Websocket 구독자에게 채팅 메시지 Send
+            // redis pub
+            chatService.sendChatMessage(chatMessageDto.getRoomId(), chatMessageDto);
         } catch (Exception e) {
             log.error(e.getMessage());
         }

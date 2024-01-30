@@ -44,7 +44,7 @@ public class NotificationServiceImpl {
     private final UserRepository userRepository;
     private final SSERepository sseRepository;
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate; // redis 저장
 
     @Transactional
     public Slice<NotificationDto> sendAlarmSliceAndIsReadToTrue(Pageable pageable,
@@ -72,6 +72,7 @@ public class NotificationServiceImpl {
             alarmSlices.getPageable(), alarmSlices.hasNext());
     }
 
+    // redis publish
     public void send(Long alarmReceiverId,SseEventName sseEventName) {
         redisTemplate.convertAndSend(sseEventName.getValue(),
             getRedisPubMessage(alarmReceiverId, sseEventName));

@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 @RequestMapping("/api")
 public class ChatController {
-    //private final ChatService chatService;
     private  final ChatProducer chatProducer;
 
     // stompConfig 에서 설정한 applicationDestinationPrefixes 와 @MessageMapping 경로가 병합됨 (/pub + ...)
@@ -26,8 +25,6 @@ public class ChatController {
     // 메세징 요청을 보낼 때에는 @MessageMapping 어노테이션을 사용
     // HTTP Method 매핑의 경우 Parameter 값을 받아오기 위해서 @PathVariable을 사용하였지만, 메세징의 경우 @DestinationVariable을 사용
     public ChatMessageDto message(@DestinationVariable String roomId, ChatMessageDto messageDto) {
-
-        //chatService.sendChatMessage(roomId, messageDto);
 
         // kafka 에 발행
         chatProducer.send(messageDto);

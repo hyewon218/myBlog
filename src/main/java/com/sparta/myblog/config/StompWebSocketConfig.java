@@ -12,7 +12,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
-@EnableWebSocketMessageBroker
+@EnableWebSocketMessageBroker // WebSocket을 활성화하고 메시지 브로커 사용가능
 @Configuration
 @RequiredArgsConstructor
 public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {

@@ -498,7 +498,7 @@ Docker Compose를 이용하여 `Kafka`와 `Zookeeper`를 도커 컨테이너로 
 - 트랜잭션 외부에서 이벤트 발행
 
 ### 기능 개선 후 동작 flow
-1. Client에서 **Sse연결을 요청**하면 Server에서는 **연결 객체를 생성**하여 이를 **서버 인메모리 내에 저장**하고 **Client에게 연결 정보를 제공**해줍니다.<br>
+1. Client에서 **SSE연결을 요청**하면 Server에서는 **연결 객체를 생성**하여 이를 **서버 인메모리 내에 저장**하고 **Client에게 연결 정보를 제공**해줍니다.<br>
 2. 댓글 작성, 글 참여 등의 **이벤트(특정 사용자가 API호출 시)가 발생**하면 해당 요청내용을 먼저 처리한 후 정상 처리 된다면 **알림 이벤트를 produce**하여 **kafka에 발행**합니다.
 3. kafka에 저장된 알림 이벤트는 두 Consumer Group에 의해서 consume 되며<br>
    **첫 번째 Consumer Group** 은 **알림 이벤트 데이터로 알림 엔티티를 만들어서 RDB에 저장**하고 **두 번째 Consumer Group**은 **SSE 응답을 보내기 위해 Redis pub/sub에 pub 메시지를 보냅니다**.

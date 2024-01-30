@@ -52,8 +52,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> kafkaListenerContainerFactoryRDB() {
         ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> factory =
-            new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(notificationRDBConsumerFactory());
+            new ConcurrentKafkaListenerContainerFactory<>(); // @KafkaListener 가 붙은 메서드의 컨테이너를 빌드(생성)해준다.
+        factory.setConsumerFactory(notificationRDBConsumerFactory()); // 이때, 설정정보가 담긴 ConsumerFactory 를 setting 할 수 있다.
         return factory;
     }
 

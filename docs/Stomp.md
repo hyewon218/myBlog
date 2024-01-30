@@ -73,7 +73,7 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 @RequiredArgsConstructor
 @RequestMapping("/api")
 public class ChatController {
-    private final SimpMessagingTemplate template; //특정 Broker 로 메세지를 전달
+    private final SimpMessagingTemplate template; //특정 Broker 로 메세지를 전달(WebSocket 으로 메시지를 전송)
     private final ChatService chatService;
 
     // stompConfig 에서 설정한 applicationDestinationPrefixes 와 @MessageMapping 경로가 병합됨 (/pub + ...)
