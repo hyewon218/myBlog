@@ -195,7 +195,7 @@ public class AlarmService {
 #### Inmemory ConcurrentHashMap.
 - **SSE 연결 시 생성된 객체를 통해 클라이언트에 응답**을 보낼 수 있으므로 **유저마다 이 객체를 조회할 수 있도록 저장**해야 합니다.
 - 이 때 **동시성 문제**가 발생할 수 있기 때문에 일반 HashMap 이 아니라 `ConcurrentHashMap`을 사용합니다.
-```
+```java
 @Slf4j
 @Component
 public class SSEInMemoryRepository implements SSERepository{
@@ -231,7 +231,7 @@ public class SSEInMemoryRepository implements SSERepository{
 
 
 #### key 값 구조
-```
+```java
 @RequiredArgsConstructor
 @EqualsAndHashCode
 public class SseRepositoryKeyRule {
@@ -262,7 +262,7 @@ public class SseRepositoryKeyRule {
 - id의 경우 보통 마지막으로 보내진 응답을 구분하여 비처 발송되지 못한 응답을 **재응답**해주는 데에 활용합니다.
 - name은 `SseEvent`를 구분합니다.
 - data는 전송 내용을 의미하며 주의할 점은 객체가 아니라 `String`형태로 보내야 합니다.
-```
+```java
 			SseEmitter emitter = sseRepository.get(key).get();
             try {
                 emitter.send(SseEmitter.event()
