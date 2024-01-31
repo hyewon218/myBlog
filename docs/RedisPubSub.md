@@ -2,17 +2,17 @@
 • 채팅방 id String으로 수정 -> redis에 저장하려면 String으로 해줘야한다고 함
 
 ## 📍Redis Pub/Sub 란?
-![66D3C3A3-420D-4FC8-B23B-51D02E3B2BF1](https://github.com/JihyeChu/PetNexus/assets/126750615/c1475ca6-a765-4c20-ae0d-e8c7996ce07f)
+<img src="https://github.com/JihyeChu/PetNexus/assets/126750615/c1475ca6-a765-4c20-ae0d-e8c7996ce07f" width="70%"/><br>
 Publish / Subscribe 란 특정한 주제(topic)에 대하여 해당 topic을 구독한 모두에게 메시지를 발행하는 통신 방법으로<br> 
 채널을 구독한 수신자(클라이언트) 모두에게 메세지를 전송 하는것을 의미한다. 하나의 Client가 메세지를 Publish하면,<br>
-이 Topic에 연결되어 있는 다수의 클라이언트가 메세지를 받을 수 있는 구조이다.
-Publish / Subscribe 구조에서 사용되는 `Queue`를 일반적으로 `Topic`이라고 한다.
-그래서 레디스의 pub/sub 기능은 은 주로 **채팅** 기능이나, 푸시 **알림**등에 사용된다.
-다만 유의할점이 있는데, 이러한 redis의 pub/sub 시스템은**매우 단순한 구조**로 되어있다는 것이다.
-Pub/Sub 시스템에서는 채널에 구독 신청을 한 모든 subscriber 에게 메시지를 전달한다.
-그런데 메시지를 "**던지는**" 시스템이기 때문에,**메시지를 따로 보관하지도 않는다**.
-즉, 수신자(클라이언트)가 메세지를 받는 것을 보장하지 않아,
-**subscribe 대상이 하나도 없는 상황**에서 메시지를 publish해도 역시 사라진다.
+이 Topic에 연결되어 있는 다수의 클라이언트가 메세지를 받을 수 있는 구조이다.<br>
+Publish / Subscribe 구조에서 사용되는 `Queue`를 일반적으로 `Topic`이라고 한다.<br>
+그래서 레디스의 pub/sub 기능은 은 주로 **채팅** 기능이나, 푸시 **알림**등에 사용된다.<br>
+다만 유의할점이 있는데, 이러한 redis의 pub/sub 시스템은**매우 단순한 구조**로 되어있다는 것이다.<br>
+Pub/Sub 시스템에서는 채널에 구독 신청을 한 모든 subscriber 에게 메시지를 전달한다.<br>
+그런데 메시지를 "**던지는**" 시스템이기 때문에,**메시지를 따로 보관하지도 않는다**.<br>
+즉, 수신자(클라이언트)가 메세지를 받는 것을 보장하지 않아,<br>
+**subscribe 대상이 하나도 없는 상황**에서 메시지를 publish해도 역시 사라진다.<br>
 그래서 일반 메시지큐처럼 수신 확인을 하지 않는다.**(전송 보장을 하지 않음)**
 
 ### 그럼에도 사용하는 이유?
@@ -22,7 +22,7 @@ Pub/Sub 시스템에서는 채널에 구독 신청을 한 모든 subscriber 에�
 > 그리고 전송된 메시지를 따로 저장하거나 수신확인이 필요 없을 때,<br> 
 > 마지막으로 100% 전송 보장은 하지 않아도 되는 데이터를 보낼때 이용하면 괜찮다.
 
-![E3D9ACB2-4D7C-49A6-9828-4CEBF719FE2A](https://github.com/JihyeChu/PetNexus/assets/126750615/d7e57aa9-71cf-4d64-a255-197a9d8e50eb)
+<img src="https://github.com/JihyeChu/PetNexus/assets/126750615/d7e57aa9-71cf-4d64-a255-197a9d8e50eb" width="70%"/><br>
 > ### In-Memory 기반 Message Broker 문제점
 > 사실 Spring에서 제공하는 STOMP를 활용하고도, 내장된 Simple Message Broker를 사용해 채팅 서버를 구현할 수 있다.
 하지만 Simple Message Broker 같은 경우 스프링 부트 서버의**내부 메모리에서 동작**하게 된다.
@@ -308,10 +308,10 @@ public class ChatController {
     8. Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
 2.  ChatRoomRedisRepository<br>
     a. 채팅방 생성 : 서버간 채팅방 공유를 위해 redis hash 에 저장한다.
-     ![C9D86211-1592-4837-B93B-D05B1470BE80_1_105_c](https://github.com/JihyeChu/PetNexus/assets/126750615/19defc02-9c97-489e-97e1-d3c02810353f)
+      <img src="https://github.com/JihyeChu/PetNexus/assets/126750615/19defc02-9c97-489e-97e1-d3c02810353f" width="70%"/><br>
     
     b. 채팅방 입장 : redis 에 topic 을 만들고 pub/sub 통신을 하기 위해 리스너를 설정
-     ![2C9CEACE-92D2-4B95-97BF-1C021152D7F7](https://github.com/hyewon218/kim-jpa2/assets/126750615/88d70b63-3b6d-4b0e-a3c6-a3e1211961d3)
+    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/88d70b63-3b6d-4b0e-a3c6-a3e1211961d3" width="70%"/><br>
 
     c. 신규 Topic 을 생성하고 Listener 등록 및 Topic Map 에 저장
     - Topic Map : topic 이름으로 topic 정보를 가져와 메시지를 발송할 수 있도록 Map 에 저장, 채팅방의 대화 메시지를 발행하기 위한 redis topic 정보, 서버별로 채팅방에 매치되는 topic 정보를 Map 에 넣어 roomId로 찾을수 있도록 한다.
