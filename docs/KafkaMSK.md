@@ -10,11 +10,11 @@ AWS MSK는 AWS 인프라에서 **카프카 클러스터를 생성, 업데이트,
 - 모니터링을 위한 프로메테우스, 그라파나 연동
 - 콘솔 프로듀서, 컨슈머 연동
 
-### 클러스터 생성
+### 카프카 클러스터 생성
 #### 📍 VPC
 VPC는 **Virtual Private Cloud**의 약자로서 사용자가 정의한 **가상의 네트워크**이다.<br>
 리전을 선택하고 특정 IP 대역을 VPC로 생성할 수 있다. VPC로 생성한 네트워크 대역에 프라이빗 IP를 가진 EC2 인스턴스를 생성할 수 있다.<br> 
-네트워크 대역은 **CIDR(Classless Inter-Domain Routing)** 표기법으로 선언하여 할당한다.
+네트워크 대역은 **CIDR(Classless Inter-Domain Routing)** 표기법으로 선언하여 할당한다.<br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/7269d470-06c1-4038-993d-f3ecd093c1c9" width="30%"/><br>
 
 #### 📍 AZ(available zone)
@@ -26,7 +26,7 @@ AWS의 **서울 리전(ap-northeast-2)** 에서는 총 **4개의 AZ(ap-northeast
 서브넷은 VPC 내부에서 생성할 수 있는 네트워크 대역이다. 서브넷을 만들 때는 VPC 네트워크 대역에 포함된 네트워크 영역을 지정해야 한다.<br>
 **VPC의 네트워크 대역을 넘어가는 IP를 가 진 서브넷 영역은 생성할 수 없다.<br>
 또한, 각 서브넷끼리는 네트워크 대역이 겹쳐서는 안 된다.**<br>
-서브넷은 단일 AZ에만 존재하며 여러 AZ에 걸쳐서 AZ를 생성할 수 없다.
+서브넷은 단일 AZ에만 존재하며 여러 AZ에 걸쳐서 AZ를 생성할 수 없다.<br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/497912ad-ac79-4f6c-98ae-b2abdd767da7" width="30%"/><br>
 
 #### 📍 인터넷 게이트웨이(Internet gateway)
@@ -107,11 +107,51 @@ Nelworking 설정 영역에서 생성한 VPC를 생성한 VPC로 설정하고 Nu
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/ffbadf30-d4b8-4917-9a08-23fa00c7d9a3" width="40%"/><br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/544e3956-a5bd-452e-9395-34428fb2f3ab" width="40%"/><br>
 
+<br>
+
+### 토픽 생성
+토픽 생성을 위해 6.2.1.2에서 생성한 인스턴스로 접속한다. 새로 생성한 인스턴스에는 카프 카 관련 명령을 내릴 수 있는 카프카 바이너리가 존재하지 않는다.<br> 
+그러므로 현재 MSK 클러스 터 버전과 동일한 카프카 바이너리 파일을 다운받도록 한다.
+
+```
+https://archive.apache.org/dist/kafka/3.5.1/kafka_2.12-3.5.1.tgz
+```
+
+카프카 바이너리를 실행하기 위해서 JDK 1.8을 yum을 통해 설치한다.
+```
+sudo yum install -y java-1.8.0-openjdk-devel.x86_64
+```
+
+MSK 클러스터에 토픽을 생성하기 위해 주키퍼 정보를 확인한다.<br>
+주키퍼 정보는 MSK 클러스터 상세 페이지에서 확인할 수 있다.<br>
+카프카 2.2.1 버전에서는 주키퍼를 사용하여 토픽을 생성할 수 있다.<br>
+MSK 클러스터로 구성된 주키퍼는 보안 설정이 되어 있지 않기 때문에 바로 연동할 수 있다.
+
+토픽 생성 명령은 `kafka-topics.sh --create` 명령으로 수행할 수 있다.
+```
+bin/kafka-topics.sh --create --zookeeper 
+z-1.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181,
+z-2.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181,
+z-3.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181 
+--replication-factor 3 -partitions 1
+--topic test. log
+```
+
+토픽 생성이 정상적으로 되었는지 kafka-topics.sh--list 명령으로 한 번 더 확인한다.
+```
+bin/kafka-topics.sh --list --zookeeper
+z-1.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181,
+z-2.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181,
+z-3.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181 
+test. log
+```
+
+<br>
 
 
 
 <br>
----
+
 ## MSK 설정
 1. Kafka 버전 지정
 2. 브로커 유형 선택 저는 비용을 고려하여 **t3.small**을 선택했습니다.
@@ -121,7 +161,6 @@ Nelworking 설정 영역에서 생성한 VPC를 생성한 VPC로 설정하고 Nu
 6. 클라이언트 접속 방식을 선택합니다. 저는 IAM Role방식을 선택했습니다.
 
 <br>
----
 
 ## Kafka Connect
 카프카 커넥트(Kafka Connect)는 아파치 카프카의 오픈소스 프로젝트로, 데이터베이스와 같은 외부 시스템과 카프카를 쉽게 연결해주는 프레임워크이다.
