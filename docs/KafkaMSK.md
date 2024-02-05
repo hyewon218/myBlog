@@ -100,17 +100,95 @@ Nelworking 설정 영역에서 생성한 VPC를 생성한 VPC로 설정하고 Nu
 
 #### MSK 클러스터 생성 완료
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/3f48bbae-f648-4137-962c-664bb89d7a0d" width="40%"/><br>
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/19ce6303-073c-4ebf-a2ae-f0a2983aff81" width="40%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/19ce6303-073c-4ebf-a2ae-f0a2983aff81" width="60%"/><br>
 
 라우팅테이블도 이미 만들어져있고, 서브넷과 연결이 되어있다. a까지 연결 완료
 
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/ffbadf30-d4b8-4917-9a08-23fa00c7d9a3" width="40%"/><br>
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/544e3956-a5bd-452e-9395-34428fb2f3ab" width="40%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/ffbadf30-d4b8-4917-9a08-23fa00c7d9a3" width="60%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/544e3956-a5bd-452e-9395-34428fb2f3ab" width="60%"/><br>
+
+<br>
+
+## 💥 Spring Boot와 MSK 연동하고자 하면 지속적으로 Connection 오류가 발생
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/c255e655-8c8f-47ce-b822-646fe47db114" width="60%"/><br>
+'해당 EndPoint를 찾을 수 없었다'가 주된 이유다.
+
+### 왜 연결이 안될까??
+알고보니 AWS MSK는 on-promise 혹은 local에서 direct로 접속이 불가하였다.<br>
+AWS MSK는 **VPC zone 내부**에 존재하고 있으며 위 스크린샷에 나온 zookeeper, broker url는 **vpc/subnet 내부에서 사용되는 private ip**였다.<br> 
+만약 kafka client를 사용하여 접속하고 싶다면 **해당 VPC내부의 ec2**를 발급받아서 접속해야만 한다.<br>
+
+MSK의 엔드 포인트를 지속적으로 연결을 하여도 Local에서는 접근을 못하는 이유는 MSK는 `Private Subnet`에서 구동하기에 Private EndPoint로 접속이 가능하다.<br> 
+그렇기에 외부 Local에서 단순히 Spring Boot에 Endpoint를 연결하더라도 접근이 거부당한다.
+이를 해결하기 위한 여러가지 방법들이 있다.
+
+- AWS Direct Connect
+- VPC 피어링
+- AWS Transit Gateway
+- **같은 VPC에 존재하는 EC2를 통해 연결**
+
+위의 방법들 뿐만 아니라 여러가지 방법들이 존재하지만 결국 AWS의 또 다른 Tool을 이용해야한다는 번거로움과 요금 지불 비용이 생긴다.
+필자는 그나마 가장 친숙하고 비용을 지불하지 않는 EC2를 통해 연결 문제를 해결하였다.
+
+### EC2에서 어떻게 해결하는 건데??
+EC2에서 해결할 수 있는 이유는 AWS가 설정한 같은 `Subnet`과 `VPC`를 이용하기에 **Private 환경에 직접적으로 접속하자**라는 취지이다.
+
+- Spring Boot를 Docker Hub에 올려놓고 EC2에서 Image Pull을 통해 EC2에서 Spring Boot가 Run할 수 있도록 설정해주는 것이다.
+
+하지만 Run을 하기 전 과연 **EC2가 MSK에 제대로 접근 할 수 있는지** 확인하기 위해 **Kafka Client**를 설치한 후에 테스트를 진행하였다.
+
+### 클라이언트 머신 생성 및 테스트
+클라이언트 머신 생성이란 MSK 클러스터와 통신해서 제어할 수 있는 관리 노드인 EC2를 생성하고 설정하는 과정이다.<br> 
+EC2가 MSK와 통신하고 제어하는 클라이언트 머신 역할을 하게 되는데,
+아래와 같은 과정을 통해서 Producer를 생성하고 Consumer에서 제대로 메세지를 읽어 내는지 확인 할 수 있다.
+
+```shell
+STEP 1. 클라이언트 머신에 Java 설치
+$ sudo yum install java-1.8.0
+STEP 2. Apache Kafka를 다운로드
+$ wget https://archive.apache.org/dist/kafka/3.5.1/kafka_2.12-3.5.1.tgz
+STEP 3. kafka 압축 풀기
+$ tar -xzf kafka_2.12-3.5.1.tgz
+STEP 4. 카프카 설치 디렉토리로 이동
+$ cd <path-to-your-kafka-installation>/bin
+STEP 5. 카프카 토픽(MSKTutorialTopic) 생성
+$ ./kafka-topics.sh --create --zookeeper ZookeeperConnectString --replication-factor 2 --partitions 1 --topic MSKTutorialTopic
+```
+
+
+### 보안 그룹 생성
+#### MSK VPC Security Group 생성
+다음에 설치할 Amazon MSK 및 Public Subnet의 SpringBoot 인스터스들을를 위한 보안 그룹을 먼저 생성해준다.<br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/e5ed386d-96d2-4649-b27d-8a92b96174b4" width="60%"/><br>
+클러스터를 생성 후에 클러스터에 보안 그룹에서 9092 포트를 열어준다.<br>
+카파카는 9092를 기본으로 사용하고 있고 만약 주키퍼도 건드리게 된다면 2181 포트도 열어주면 된다.<br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/7e46491a-f421-4e0e-affe-072755f2403c" width="60%"/><br>
+
+#### EC2 VPC Security Group 생성
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/9c06f3ce-afaa-438a-9e0f-5e9681c449cb" width="60%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/c60fd4bb-dafb-4383-9057-78e859d4018a" width="60%"/><br>
+
+#### MSK 생성
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/82321a20-f5ee-465f-a3e3-de027a26faf4" width="60%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2502a2ae-6010-4f6e-ac9d-ea91c2eace10" width="60%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2014e4b8-cd02-4ffe-bc83-cfe2195729e5" width="60%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/57db29b0-5691-4fb1-a9d9-984522ee300e" width="60%"/><br>
+
+#### Kafka Client EC2 생성
+- Kafka client로 사용할 EC2를 위에서 생성한 VPC 내에 구축
+- Kafka Cluster와 EC2 클라이언트가 연결될 수 있도록 보안 그룹을 수정
+
+(1) EC2 인스턴스의 인바운드 규칙으로 Kafka클러스터의 보안그룹을 소스유형으로 지정<br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/5fc2dfc1-bb43-4966-bc76-396d46540924" width="60%"/><br>
+(2) Kafka클러스터의 인바운드 규칙에 EC2인스턴스의 보안그룹을 소스유형으로 지정<br>
+
+
 
 <br>
 
 ### 토픽 생성
-토픽 생성을 위해 6.2.1.2에서 생성한 인스턴스로 접속한다. 새로 생성한 인스턴스에는 카프 카 관련 명령을 내릴 수 있는 카프카 바이너리가 존재하지 않는다.<br> 
+아래 방식은 직접 카프카를 다운로드하고 연결해 주제와 토픽을 생성하는 방법이다.<br>
+토픽 생성을 위해 생성한 인스턴스로 접속한다. 새로 생성한 인스턴스에는 카프 카 관련 명령을 내릴 수 있는 카프카 바이너리가 존재하지 않는다.<br> 
 그러므로 현재 MSK 클러스 터 버전과 동일한 카프카 바이너리 파일을 다운받도록 한다.
 
 ```
@@ -137,6 +215,22 @@ z-3.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181
 --topic test. log
 ```
 
+```
+./kafka-topics.sh --create --zookeeper z-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181,z-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181,z-3.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181 --replication-factor 2 -partitions 1 --topic MSKTutorialTopic
+```
+안되는데...?
+```
+./kafka-topics.sh --create --bootstrap-server b-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092 --replication-factor 2 -partitions 1 --topic MSKTutorialTopic
+```
+- --bootstrap-server {**카프카 엔드포인트**}<br>
+MSK 클러스터를 통해 들어가서 오른쪽에 `클라이언트 정보` 보기<br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/9649c156-cb3b-4f78-9ed8-7771f04d2b71" width="60%"/><br>
+
+복사한 **엔드 포인트**를 넣어주고 위 명령어를 통해 토픽을 만들어 준다.<br> 
+정상적으로 만들어진다면 `Created topic MSKTutorialTopic.`라는 메시지가 표시된다.<br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/605fcc87-f306-4000-834b-db6cf5c12fee" width="100%"/><br>
+
+
 토픽 생성이 정상적으로 되었는지 kafka-topics.sh--list 명령으로 한 번 더 확인한다.
 ```
 bin/kafka-topics.sh --list --zookeeper
@@ -145,9 +239,50 @@ z-2.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181,
 z-3.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181 
 test. log
 ```
+```
+./kafka-topics.sh --list --zookeeper z-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181,z-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181,z-3.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181 MSKTutorialTopic
+```
+```
+./kafka-topics.sh --list --bootstrap-server b-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092 MSKTutorialTopic
+```
 
 <br>
 
+### Producer & Consumer Test
+위에서 EC2와 MSK의 연결 상태를 확인했고, Topic 생성까지 마쳤다. 이제는 Producer와 Consumer를 생성해보고 Test하는 과정을 보고자 한다.<br>
+- 일련의 과정을 확인하기 위한 보안 설정을 위해 `client.properties`라는 파일을 만든다.
+  ```
+  security.protocol=PLAINTEXT
+  ```
+  작성해준다.<br>
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2780e0d4-6dc3-44f4-8948-c2e65c9e4ce9" width="100%"/><br>
+- 보안 설정이 끝났으면 이제 Topic에 **Producer를 생성**한다.
+    ```
+     ./kafka-console-producer.sh --broker-list --bootstrap-server b-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092 --producer.config client.properties --topic MSKTutorialTopic
+    ```
+
+- Producer 생성이 끝나면 메세지를 입력할 수 있다.<br>
+  메시지 입력하고 Enter 키를 누르면 다음 줄이 나오는데 또 다른 메시지를 입력하고 Enter를 누르면 몇 번 반복한다.<br> 
+  Kafka는 클러스터에 별도의 메시지로 전송된다.
+- `Ctrl+C` 키를 눌러 빠져나오고 아래 명령어로 보낸 메시지를 확인한다.
+- 이제 Producer 생성이 끝났으니 **Consumer 생성**을 진행해보자.
+    ```
+     ./kafka-console-consumer.sh --bootstrap-server b-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092 --consumer.config client.properties --topic MSKTutorialTopic --from-beginning
+    ```
+- Producer에서 생성했던 메세지를 Consumer가 모두 읽어오는 것을 확인할 수 있다.
+**MSK와 Spring Boot와 연동하기 전에 MSK가 제대로 동작하는지 확인해보기 위해 EC2 환경에서 Kafka Client를 활용해서 확인해보았다.**
+
+<br>
+
+
+
+
+###  프로메테우스 설치 및 연동
+프로메테우스를 설치하고 클러스터의 JMX 익스포터, 노드 익스포터로부터 지표를 수집해보자. 수집을 위해 우선 프로메테우스를 설치해야 한다.<br> 
+프로메테우스 설치를 위해 바이너리 파일을 다운로드받고 압축을 푼다.
+```
+wget https: //github.com/prometheus/prometheus/releases/download/v2.20.1/prometheus-2.20.1. linux-amd64. tar.gz
+```
 
 
 <br>
@@ -160,19 +295,4 @@ test. log
 5. vpc 서브넷, 보안 그룹을 설정해줍니다. MSK는 기본적으로 VPC 내부에서만 연결됩니다.
 6. 클라이언트 접속 방식을 선택합니다. 저는 IAM Role방식을 선택했습니다.
 
-<br>
-
-## Kafka Connect
-카프카 커넥트(Kafka Connect)는 아파치 카프카의 오픈소스 프로젝트로, 데이터베이스와 같은 외부 시스템과 카프카를 쉽게 연결해주는 프레임워크이다.
-- 데이터 파이프라인 생성 시 반복 작업을 줄이고 효율적인 전송을 이루기 위한 어플리케이션.
-- 반복적인 파이프라인 생성작업 시 매번 프로듀서 컨슈머 어플리케이션을 개발하고 배포, 운영 하는것은 비효율적
-- 커넥트를 이용하면 특정한 작업 형태를 템플릿으로 만들어 놓은 커넥터 를 실행함으로써 반복작업을 줄일 수 있음.
-- 커넥터는 프로듀서 역할을 하는 `소스 커넥터` 와 컨슈머 역할을 하는 `싱크 커넥
-- 터` 2가지로 나뉜다.
-
-### Kafka Connect 작동 방식
-Kafka Connect에는 두 가지 유형의 커넥터가 포함되어 있다.
-- `소스 커넥터` : 데이터베이스를 수집하고 Kafka topic에 대한 테이블 업데이트를 스트리밍한다.<br> 
-또한 소스 커넥터는 모든 애플리케이션 서버에서 메트릭을 수집하고 이를 Kafka topic에 저장할 수 있다.
-- `싱크 커넥터` : Kafka topic의 데이터를 **Elasticsearch**나 **Hadoop**과 같은 시스템으로 전달한다.
 
