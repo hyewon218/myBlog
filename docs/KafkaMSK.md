@@ -155,40 +155,51 @@ STEP 5. 카프카 토픽(MSKTutorialTopic) 생성
 $ ./kafka-topics.sh --create --zookeeper ZookeeperConnectString --replication-factor 2 --partitions 1 --topic MSKTutorialTopic
 ```
 
+<br>
 
-### 보안 그룹 생성
+### 🔐 보안 그룹 생성
 #### MSK VPC Security Group 생성
-다음에 설치할 Amazon MSK 및 Public Subnet의 SpringBoot 인스터스들을를 위한 보안 그룹을 먼저 생성해준다.<br>
+다음에 설치할 Amazon MSK 및 Public Subnet의 SpringBoot 인스턴스들을 위한 보안 그룹을 먼저 생성해준다.<br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/e5ed386d-96d2-4649-b27d-8a92b96174b4" width="60%"/><br>
 클러스터를 생성 후에 클러스터에 보안 그룹에서 9092 포트를 열어준다.<br>
-카파카는 9092를 기본으로 사용하고 있고 만약 주키퍼도 건드리게 된다면 2181 포트도 열어주면 된다.<br>
+카프카는 9092를 기본으로 사용하고 있고 만약 주키퍼도 건드리게 된다면 2181 포트도 열어주면 된다.<br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/7e46491a-f421-4e0e-affe-072755f2403c" width="60%"/><br>
 
 #### EC2 VPC Security Group 생성
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/9c06f3ce-afaa-438a-9e0f-5e9681c449cb" width="60%"/><br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/c60fd4bb-dafb-4383-9057-78e859d4018a" width="60%"/><br>
 
-#### MSK 생성
+<br>
+
+### MSK 생성
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/82321a20-f5ee-465f-a3e3-de027a26faf4" width="60%"/><br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2502a2ae-6010-4f6e-ac9d-ea91c2eace10" width="60%"/><br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2014e4b8-cd02-4ffe-bc83-cfe2195729e5" width="60%"/><br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/57db29b0-5691-4fb1-a9d9-984522ee300e" width="60%"/><br>
 
-#### Kafka Client EC2 생성
+<br>
+
+### Kafka Client EC2 생성
 - Kafka client로 사용할 EC2를 위에서 생성한 VPC 내에 구축
 - Kafka Cluster와 EC2 클라이언트가 연결될 수 있도록 보안 그룹을 수정
 
 (1) EC2 인스턴스의 인바운드 규칙으로 Kafka클러스터의 보안그룹을 소스유형으로 지정<br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/5fc2dfc1-bb43-4966-bc76-396d46540924" width="60%"/><br>
 (2) Kafka클러스터의 인바운드 규칙에 EC2인스턴스의 보안그룹을 소스유형으로 지정<br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/65711d22-a4f3-43d3-b03e-a1fcf77645c4" width="60%"/><br>
 
+#### EC2 클라이언트 kafka 테스트
+1. 클라이언트에 카프카 구축
+```shell
+sudo yum install java-1.8.0-openjdk
+wget https://archive.apache.org/dist/kafka/3.5.1/kafka_2.12-3.5.1.tgz (구축한 MSK 버전과 일치해야 합니다.)
+tar -xvf kafka_2.12-3.5.1.tgz
+cd kafka_2.12-3.5.1
+cd bin
+```
 
-
-<br>
-
-### 토픽 생성
 아래 방식은 직접 카프카를 다운로드하고 연결해 주제와 토픽을 생성하는 방법이다.<br>
-토픽 생성을 위해 생성한 인스턴스로 접속한다. 새로 생성한 인스턴스에는 카프 카 관련 명령을 내릴 수 있는 카프카 바이너리가 존재하지 않는다.<br> 
+토픽 생성을 위해 생성한 인스턴스로 접속한다. 새로 생성한 인스턴스에는 카프카 관련 명령을 내릴 수 있는 카프카 바이너리가 존재하지 않는다.<br> 
 그러므로 현재 MSK 클러스 터 버전과 동일한 카프카 바이너리 파일을 다운받도록 한다.
 
 ```
@@ -205,22 +216,11 @@ MSK 클러스터에 토픽을 생성하기 위해 주키퍼 정보를 확인한�
 카프카 2.2.1 버전에서는 주키퍼를 사용하여 토픽을 생성할 수 있다.<br>
 MSK 클러스터로 구성된 주키퍼는 보안 설정이 되어 있지 않기 때문에 바로 연동할 수 있다.
 
+2. 토픽 생성 <br>
+
 토픽 생성 명령은 `kafka-topics.sh --create` 명령으로 수행할 수 있다.
 ```
-bin/kafka-topics.sh --create --zookeeper 
-z-1.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181,
-z-2.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181,
-z-3.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181 
---replication-factor 3 -partitions 1
---topic test. log
-```
-
-```
-./kafka-topics.sh --create --zookeeper z-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181,z-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181,z-3.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181 --replication-factor 2 -partitions 1 --topic MSKTutorialTopic
-```
-안되는데...?
-```
-./kafka-topics.sh --create --bootstrap-server b-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092 --replication-factor 2 -partitions 1 --topic MSKTutorialTopic
+./kafka-topics.sh --create --bootstrap-server b-2.myblogmskcluster.6e98cb.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogmskcluster.6e98cb.c3.kafka.ap-northeast-2.amazonaws.com:9092 --replication-factor 2 -partitions 1 --topic MSKTutorialTopic
 ```
 - --bootstrap-server {**카프카 엔드포인트**}<br>
 MSK 클러스터를 통해 들어가서 오른쪽에 `클라이언트 정보` 보기<br>
@@ -230,45 +230,38 @@ MSK 클러스터를 통해 들어가서 오른쪽에 `클라이언트 정보` �
 정상적으로 만들어진다면 `Created topic MSKTutorialTopic.`라는 메시지가 표시된다.<br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/605fcc87-f306-4000-834b-db6cf5c12fee" width="100%"/><br>
 
-
-토픽 생성이 정상적으로 되었는지 kafka-topics.sh--list 명령으로 한 번 더 확인한다.
+토픽 생성이 정상적으로 되었는지 `kafka-topics.sh --list` 명령으로 한 번 더 확인한다.
 ```
-bin/kafka-topics.sh --list --zookeeper
-z-1.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181,
-z-2.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181,
-z-3.myblogkafkacluste.mmnf21.c3.kafka.ap-northeast-2.amazonaws.com:2181 
-test. log
+./kafka-topics.sh --list --bootstrap-server b-2.myblogmskcluster.6e98cb.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogmskcluster.6e98cb.c3.kafka.ap-northeast-2.amazonaws.com:9092 MSKTutorialTopic
 ```
-```
-./kafka-topics.sh --list --zookeeper z-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181,z-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181,z-3.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:2181 MSKTutorialTopic
-```
-```
-./kafka-topics.sh --list --bootstrap-server b-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092 MSKTutorialTopic
-```
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/511935b1-94a6-4014-b91c-9ced00992471" width="100%"/><br>
 
 <br>
 
-### Producer & Consumer Test
-위에서 EC2와 MSK의 연결 상태를 확인했고, Topic 생성까지 마쳤다. 이제는 Producer와 Consumer를 생성해보고 Test하는 과정을 보고자 한다.<br>
+#### Producer & Consumer Test
+위에서 EC2와 MSK의 연결 상태를 확인했고, Topic 생성까지 마쳤다.<br> 
+이제는 Producer와 Consumer를 생성해보고 Test하는 과정을 보고자 한다.<br>
 - 일련의 과정을 확인하기 위한 보안 설정을 위해 `client.properties`라는 파일을 만든다.
   ```
   security.protocol=PLAINTEXT
   ```
   작성해준다.<br>
-  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2780e0d4-6dc3-44f4-8948-c2e65c9e4ce9" width="100%"/><br>
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/80c6d1c8-d259-437a-9ab2-2cd29a44ba1d" width="100%"/><br>
 - 보안 설정이 끝났으면 이제 Topic에 **Producer를 생성**한다.
-    ```
-     ./kafka-console-producer.sh --broker-list --bootstrap-server b-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092 --producer.config client.properties --topic MSKTutorialTopic
-    ```
+   ```
+   ./kafka-console-producer.sh --bootstrap-server b-2.myblogmskcluster.6e98cb.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogmskcluster.6e98cb.c3.kafka.ap-northeast-2.amazonaws.com:9092 --producer.config ../config/client.properties --topic MSKTutorialTopic
+   ```
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/cd0527ab-5f66-4ee0-8d96-ab67bff08a45" width="100%"/><br>
 
 - Producer 생성이 끝나면 메세지를 입력할 수 있다.<br>
   메시지 입력하고 Enter 키를 누르면 다음 줄이 나오는데 또 다른 메시지를 입력하고 Enter를 누르면 몇 번 반복한다.<br> 
   Kafka는 클러스터에 별도의 메시지로 전송된다.
 - `Ctrl+C` 키를 눌러 빠져나오고 아래 명령어로 보낸 메시지를 확인한다.
 - 이제 Producer 생성이 끝났으니 **Consumer 생성**을 진행해보자.
-    ```
-     ./kafka-console-consumer.sh --bootstrap-server b-2.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogkafkacluste.y64lv7.c3.kafka.ap-northeast-2.amazonaws.com:9092 --consumer.config client.properties --topic MSKTutorialTopic --from-beginning
-    ```
+   ```
+   ./kafka-console-consumer.sh --bootstrap-server b-2.myblogmskcluster.6e98cb.c3.kafka.ap-northeast-2.amazonaws.com:9092,b-1.myblogmskcluster.6e98cb.c3.kafka.ap-northeast-2.amazonaws.com:9092 --consumer.config ../config/client.properties --topic MSKTutorialTopic --from-beginning
+   ```
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/025952da-39dd-4809-a5c4-372d3018d489" width="100%"/><br>
 - Producer에서 생성했던 메세지를 Consumer가 모두 읽어오는 것을 확인할 수 있다.
 **MSK와 Spring Boot와 연동하기 전에 MSK가 제대로 동작하는지 확인해보기 위해 EC2 환경에서 Kafka Client를 활용해서 확인해보았다.**
 
@@ -290,7 +283,7 @@ wget https: //github.com/prometheus/prometheus/releases/download/v2.20.1/prometh
 ## MSK 설정
 1. Kafka 버전 지정
 2. 브로커 유형 선택 저는 비용을 고려하여 **t3.small**을 선택했습니다.
-3. 영역 수(2 or 3) 설정 영역당 브로커 선택. 영역당 브로커는 Bloker의 개수를 의미하며 영역 수는 Availability zone을 의미합니다. 영역 수는 설정 후 변경할 수 없습니다.
+3. 영역 수(2 or 3) 설정 영역당 브로커 선택. 영역당 브로커는 Broker의 개수를 의미하며 영역 수는 Availability zone을 의미합니다. 영역 수는 설정 후 변경할 수 없습니다.
 4. storage는 자동 확장은 가능하지만 줄일 수 없기 때문에 너무 크지않게 선택합니다. 프로미저닝옵션을 선택할 경우 요금이 추가됩니다.
 5. vpc 서브넷, 보안 그룹을 설정해줍니다. MSK는 기본적으로 VPC 내부에서만 연결됩니다.
 6. 클라이언트 접속 방식을 선택합니다. 저는 IAM Role방식을 선택했습니다.
