@@ -231,8 +231,20 @@ sudo docker run --name spring -d -p 8080:80 -e NAME=admin -e PASSWORD=pwd test/t
 
 이렇게 하면 보안이 중요한 데이터들이 이미지가 올리지 않고 컨테이너를 만들 수 있다.
 
+<br>
 
+### RDS 연결
+RDS 연결은 코드를 따로 수정 할 필요는 없고 RDS를 구매하고 인텔리제이에 연결하면 된다. 이 상태로 jar 파일을 만들어 이미지를 만들면 끝이다.
 
+※ RDS : 아마존 웹 서비스(AWS)가 서비스하는 분산 관계형 데이터베이스
+
+그리고 application.properties에 아래 3가지를 수정해주면 된다.
+
+```
+spring.datasource.url=jdbc:mysql://{엔드포인트}:3306/{DB 이름}
+spring.datasource.username={RDS 사용자 이름}
+spring.datasource.password={RDS 암호}
+```
 
 <br>
  
