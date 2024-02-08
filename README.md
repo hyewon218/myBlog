@@ -1,6 +1,6 @@
 # myBlog
 
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/f716e25e-8d44-49fa-b366-407c5fde6176" width="90%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/fc03aa8e-12ff-4c84-907a-fed8b577a0c8" width="90%"/><br>
 
 1. [Stomp 정리](https://github.com/hyewon218/myBlog/blob/master/docs/Stomp.md)
 2. [Stomp JWT 정리](https://github.com/hyewon218/myBlog/blob/master/docs/StompJWT.md)
@@ -10,7 +10,8 @@
 6. [ElastiCache 정리](https://github.com/hyewon218/myBlog/blob/master/docs/ElastiCacheForRedis.md)
 7. [Kafka 정리](https://github.com/hyewon218/myBlog/blob/master/docs/Kafka.md)
 8. [Kafka MSK 정리](https://github.com/hyewon218/myBlog/blob/master/docs/KafkaMSK.md)
-9. [Spring 프로젝트 Docker로 배포 정리](https://github.com/hyewon218/myBlog/blob/master/docs/SpringDockerDeployment.md)
-10. [AWS 정리](https://github.com/hyewon218/myBlog/blob/master/docs/AWS.md)
-11. [RDS 연결 정리](https://github.com/hyewon218/myBlog/blob/master/docs/RDS.md)
-12. [Nginx 정리](https://github.com/hyewon218/myBlog/blob/master/docs/Nginx.md)
+9. [Kafka Connect 정리](https://github.com/hyewon218/myBlog/blob/master/docs/KafkaConnect.md)
+10. [Spring 프로젝트 Docker로 배포 정리](https://github.com/hyewon218/myBlog/blob/master/docs/SpringDockerDeployment.md)
+11. [AWS 정리](https://github.com/hyewon218/myBlog/blob/master/docs/AWS.md)
+12. [RDS 연결 정리](https://github.com/hyewon218/myBlog/blob/master/docs/RDS.md)
+13. [Nginx 정리](https://github.com/hyewon218/myBlog/blob/master/docs/Nginx.md)
