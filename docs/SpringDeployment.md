@@ -140,33 +140,26 @@ chmod +x gradlew
 ### 5. docker hub 회원가입& local에서 로그인
 
 #### local 로그인
-CMD에서 'docker login -u {ID}' 를 입력하면 Password를 입력할 수 있다. 둘 다 맞게 입력해주면 내 docker hub에 작업이 가능하다.
+CMD에서 'docker login -u {ID}' 를 입력하면 Password를 입력할 수 있다.<br> 
+둘 다 맞게 입력해주면 내 docker hub에 작업이 가능하다.<br>
 (* ID 또는 로그인 ID(이메일)을 입력해주면 된다.)
 
-<br>
-
 ### 6. jar 파일을 이미지로 생성 & 만든 이미지를 docker hub에 push
-#### 이미지 생성
+#### OS에 맞게 도커 이미지 빌드 & 푸시
 ```
-# docker build -t {ID} / {이미지명}:{태그} {Docker 파일 위치}
-docker build -t won1110218/myblog_image:1.0 /Users/choihyewon/Desktop/개발/Backend_Spring/myBlog
+# docker build -t {ID} / {이미지명}:{태그} {DockerFile 위치}
+docker buildx build --push --platform linux/amd64 -t won1110218/myblog_image .
 ```
+
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/04994b2e-0156-4ec3-8ba6-1cdd374f0448" width="100%"/><br>
+
 docker desktop에 아래 내용으로 만들어진다.<br>
 Name => won1110218/`myblog_image`<br>
-Tag => `1.0`
-
+Tag => `1.0`<br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/969482b8-63bc-41ae-ae9b-98025c697638" width="60%"/><br>
 ※ tag를 지정하지 않으면 자동으로 latest 으로 저장되며 push할 때 tag를 입력하지 않아도 된다.
 
-#### docker hub push
-5번에서 로그인한 docker hub 계정에 push 한다.<br>
-
-```
-# docker push  {ID}/[{이미지명}:{태그}]
-docker push won1110218/myblog_image:1.0
-```
-
 올라간 건 docker hub - Repositories에서 확인 할 수 있다.<br>
-
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2fd82a34-880f-42f3-8fe6-9e830bb9dc4c" width="60%"/><br>
 
 <br>
@@ -183,12 +176,14 @@ login as : ubuntu
 
 sudo docker login -u {ID}
 Password : 
+
+sudo docker pull won1110218/myblog_image
 ------------------------------------------------------------------
 # 컨테이너명  : spring
 # 포트 : 80 (뒤에 있는 포트 사용)
 # 이미지명 : won1110218/myblog_image:1.0
 
-sudo docker run --name spring -d -p 8080:80 -e NAME=won1110218 -e PASSWORD=password won1110218/myblog_image:1.0
+sudo docker run --name spring -d -p 80:80 won1110218/myblog_image:latest
 ```
 docker ps 로 컨테이너를 조회 해봤을 때 만든 이미지가 Up 상태로 나오면 된다.<br>
 ※ 처음에는 Up 상태인데 몇 초 정도 지나면 Exited 상태로 바뀌는 경우가 많다. 여러 번 조회 해보는 게 좋다.
@@ -226,7 +221,7 @@ spring.datasource.password=${PASSWORD}
 # -e : 옵션 설정, 건 마다 적어줘야 한다.
 # -e {환경변수 이름}={적용되는 값}
 
-sudo docker run --name spring -d -p 8080:80 -e NAME=admin -e PASSWORD=pwd test/test_image:1.0
+sudo docker run --name spring -d -p 80:80 -e NAME=admin -e PASSWORD=pwd test/test_image:latest
 ```
 
 이렇게 하면 보안이 중요한 데이터들이 이미지가 올리지 않고 컨테이너를 만들 수 있다.
@@ -247,7 +242,20 @@ spring.datasource.password={RDS 암호}
 ```
 
 <br>
- 
+
+## EC2 서버 멈춤(메모리 부족)
+
+
+
+## 프로필 설정
+프로젝트를 실행하기 전에 로컬 개발 환경과 배포 환경을 구분해줘야 한다.<br> 
+개발 환경에서 실제 운영 DB를 연동하여 테스트할수는 없기 때문이다.<br> 
+저는 springboot에서 제공하는 profile과 환경변수를 이용하여 분리해보겠습니다.
+
+
+
+
+
 ---
 ## Spring Boot 서버를 EC2에 배포하기
 ### ✅ 1. Ubuntu 환경에서 JDK 설치하는 법
