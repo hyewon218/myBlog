@@ -244,16 +244,78 @@ spring.datasource.password={RDS 암호}
 <br>
 
 ## EC2 서버 멈춤(메모리 부족)
+사유를 찾아보니 메모리 부족으로 인한 서버 멈춤 현상이었고 `Swap`을 통해 메모리를 할당하여 해결하였다.<br>
+※ 멈춘 서버를 다시 기동하려면 AWS - EC2 - 인스턴스 상태 - 재부팅하고 기다려주면 된다.
 
+1. 로그 확인
+   메모리 이슈가 아닐 수 도 있으니 로그부터 확인해보는 것이 좋다. 나는 로그에 아무런 문제가없었어서 사유 찾는데 좀 걸렸다.
+   - 컨테이너
+    ```
+    docker logs 컨테이너명
+    ```
+   - 인스턴스<br>
+     인스턴스 상태 - 모니터링 및 문제 해결 - 시스템 로그 가져오기
 
+2. Swap 이란?
+   메모리 공간 부족 방지를 위한 임시 방편으로 하드 디스크의 일부를 RAM 처럼 사용할 수 있게 만드는 것이다.<br> 
+   리눅스 커널은 실제 메모리에 올라와 있는 메모리 불록 중 당장 사용하지 않는 것을 디스크에 저장하고 이를 통해 사용 가능한 메모리 영역을 늘린다.<br>
+   메모리가 부족하던 옛날에 사용하는 방법이라고 하는데 AWS에서 프리티어로 사용중인 서버라 메모리가 넉넉하지 않으니 사용하는 방법이라고 한다.<br>
+   *AWS 에 swap 사용 공식 문서가 있다. > [공식 문서]*(https://repost.aws/ko/knowledge-center/ec2-memory-swap-file)
+   - 현재 swap 확인
+   ```
+   free -m
+   ```
+
+3. 스왑 늘리는 방법
+   순서대로 명령어를 입력해주면 된다!<br>
+   1. dd 명령을 사용하여 루트 파일 시스템에 스왑 파일을 생성bs = 블록크기*count = 블록 수 = 스왑 파일 크기128MB*32 = 4GB
+   ```
+   sudo dd if=/dev/zero of=/swapfile bs=128M count=32
+   ```
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/5ebea11d-d35d-418f-bf02-64a10ddd6f43" width="80%"/><br>
+
+   2. 스왑 파일의 읽기 및 쓰기 권한을 업데이트
+   ```
+   sudo chmod 600 /swapfile
+   ```
+   3.  Linux 스왑 영역을 설정
+   ```
+   sudo mkswap /swapfile
+   ```
+   4. 스왑 공간에 스왑 파일을 추가 -> 스왑 파일을 즉시 사용
+   ```
+   sudo swapon /swapfile
+   ```
+   5. 프로시저가 성공적인지 확인
+   ```
+   sudo swapon -s
+   ```
+   6. /etc/fstab 파일을 편집하여 부팅 시 스왑 파일을 시작
+   ```
+   sudo vi /etc/fstab
+   ```
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/f6cd0e03-8d09-411a-8b7d-7fe00e5f63ca" width="80%"/><br>
+
+   7. 파일 끝에 다음 줄을 새로 추가하고 파일을 저장한 다음 종료
+   ```
+   /swapfile swap swap defaults 0 0
+   ```
+   8. 7번까지 진행하고`free -m`명령어를 입력해주면 0 이었던 스왑 메모리에 값이 할당 된 것을 볼 수 있다.
+
+   <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/b5c5d4d2-2daf-4177-9d7a-fd683d42090b" width="80%"/><br>
+
+4. 컨테이너 실행
+
+서버 재부팅을 하면서 컨테이너가 전부 중지 되었기 때문에 start 명령어를 통해 다시 실행 시켜준다.
+```
+docker start {컨테이너명}
+```
+상태가 up 으로 유지되면 해결!
 
 ## 프로필 설정
 프로젝트를 실행하기 전에 로컬 개발 환경과 배포 환경을 구분해줘야 한다.<br> 
 개발 환경에서 실제 운영 DB를 연동하여 테스트할수는 없기 때문이다.<br> 
 저는 springboot에서 제공하는 profile과 환경변수를 이용하여 분리해보겠습니다.
-
-
-
 
 
 ---
