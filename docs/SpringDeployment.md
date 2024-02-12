@@ -192,8 +192,8 @@ docker ps 로 컨테이너를 조회 해봤을 때 만든 이미지가 Up 상태
 
 ### 8. 배포 확인
 아래 URL로 들어가 페이지가 나오면 성공이다.
-
 > http:// 퍼블릭 IPv4 주소 : 포트번호
+> <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/743a9c8d-a8a5-41ff-a625-7c544cdd2eba" width="60%"/><br>
 
 <br>
 
