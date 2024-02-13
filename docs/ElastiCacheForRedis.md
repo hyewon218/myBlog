@@ -17,6 +17,11 @@
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/05ba88e9-81aa-4e00-b3a2-1a031d721f30" width="60%"/><br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/29ef3ee5-ff59-453e-87b7-55ea60158081" width="60%"/><br>
 
+## 🔐 보안그룹 설정
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/5e659e2f-0111-40a9-afcd-8e6019eed59e" width="60%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/36dde3be-6987-4bc4-af3d-f0a49cf9239c" width="60%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/a2ccd4d3-17e7-4d94-a9f2-f8dccf061169" width="60%"/><br>
+
 <br>
 
 ## ec2 설정
@@ -32,7 +37,10 @@
 
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/b3297585-758b-45fa-91e0-803083cec447" width="60%"/><br>
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/ec16bc93-d3c5-438c-be6b-743a1b104ad9" width="60%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/a713246b-20e8-4b09-9a23-ab7da619c389" width="60%"/><br>
+- 🔐 elasticache 보안그룹 추가
 
+<br>
 
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/0ed71744-2458-44c4-b9a1-635d154d0ded" width="60%"/><br>
 - 다음 명령을 실행하여 인스턴스의 모든 패키지를 업데이트
