@@ -19,27 +19,27 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 @Configuration
 public class KafkaConsumerConfig {
 
-    @Value("${kafka.bootstrapAddress}")
+    @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    @Value("${kafka.consumer.autoOffsetResetConfig}")
+    @Value("${spring.kafka.consumer.auto-offset-reset}")
     private String autoOffsetResetConfig;
 
-    @Value("${kafka.consumer.alarm.rdb-group-id}")
+    @Value("${spring.kafka.consumer.alarm.rdb-group-id}")
     private String rdbNotificationGroupId;
 
-    @Value("${kafka.consumer.alarm.redis-group-id}")
+    @Value("${spring.kafka.consumer.alarm.redis-group-id}")
     private String redisNotificationGroupId;
 
-    @Value("${kafka.consumer.chat.rdb-group-id}")
+    @Value("${spring.kafka.consumer.chat.rdb-group-id}")
     private String rdbChatGroupId;
 
-    @Value("${kafka.consumer.chat.redis-group-id}")
+    @Value("${spring.kafka.consumer.chat.redis-group-id}")
     private String redisChatGroupId;
 
     // 알람
     @Bean
-    public ConsumerFactory<String, NotificationEvent> notificationRDBConsumerFactory() {
+    public ConsumerFactory<String, NotificationEvent> notificationRDBConsumerFactory() { // Topic 에 접속하기 위한 정보를 가진 Factory 빈 생성
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.GROUP_ID_CONFIG, rdbNotificationGroupId);
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -50,7 +50,7 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> kafkaListenerContainerFactoryRDB() {
+    public ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> kafkaListenerContainerFactoryRDB() { // Topic 에 변경사항이 존재하는 이벤트를 리스닝하는 빈
         ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> factory =
             new ConcurrentKafkaListenerContainerFactory<>(); // @KafkaListener 가 붙은 메서드의 컨테이너를 빌드(생성)해준다.
         factory.setConsumerFactory(notificationRDBConsumerFactory()); // 이때, 설정정보가 담긴 ConsumerFactory 를 setting 할 수 있다.

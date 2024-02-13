@@ -19,8 +19,8 @@ public class ChatConsumer {
     // 저장
     // @KafkaListener : topic, groupId, containerFactory 세 개의 값을 통해 '카프카로부터' 값을 가져올 수 있다.
     @KafkaListener(
-        topics = "${kafka.topic.chat.name}",
-        groupId = "${kafka.consumer.chat.rdb-group-id}",
+        topics = "chatroom",
+        groupId = "${spring.kafka.consumer.chat.rdb-group-id}",
         properties = {AUTO_OFFSET_RESET_CONFIG + ":earliest"},
         containerFactory = "kafkaListenerContainerFactoryChatRDB"
     ) // containerFactory 는 config 파일에서 설정한 bean
@@ -31,8 +31,8 @@ public class ChatConsumer {
 
     // 메세지 보냄
     @KafkaListener(
-        topics = "${kafka.topic.chat.name}",
-        groupId = "${kafka.consumer.chat.redis-group-id}",
+        topics = "chatroom",
+        groupId = "${spring.kafka.consumer.chat.redis-group-id}",
         properties = {AUTO_OFFSET_RESET_CONFIG + ":earliest"},
         containerFactory = "kafkaListenerContainerFactoryChatRedis"
     )
