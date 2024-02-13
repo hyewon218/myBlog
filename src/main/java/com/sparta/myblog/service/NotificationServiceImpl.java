@@ -44,7 +44,7 @@ public class NotificationServiceImpl {
     private final UserRepository userRepository;
     private final SSERepository sseRepository;
 
-    private final RedisTemplate<String, String> redisTemplate; // redis 저장
+    private final RedisTemplate<String, Object> redisNotificationTemplate; // redis 저장
 
     @Transactional
     public Slice<NotificationDto> sendAlarmSliceAndIsReadToTrue(Pageable pageable,
@@ -72,9 +72,9 @@ public class NotificationServiceImpl {
             alarmSlices.getPageable(), alarmSlices.hasNext());
     }
 
-    // redis publish
-    public void send(Long alarmReceiverId,SseEventName sseEventName) {
-        redisTemplate.convertAndSend(sseEventName.getValue(),
+    public void send(Long alarmReceiverId,SseEventName sseEventName) { // RedisPublisher
+        // 해당 채널로 메시지를 발행(publish) -> 대기하고 있던 onMessage 가 해당 메세지를 받아 처리
+        redisNotificationTemplate.convertAndSend(sseEventName.getValue(),
             getRedisPubMessage(alarmReceiverId, sseEventName));
     }
 
@@ -93,6 +93,8 @@ public class NotificationServiceImpl {
 
         String key = new SseRepositoryKeyRule(userId, SseEventName.NOTIFICATION_LIST,
             now).toCompleteKeyWhichSpecifyOnlyOneValue();
+
+        log.info("subscribe");
 
         sse.onCompletion(() -> {
             log.info("onCompletion callback");

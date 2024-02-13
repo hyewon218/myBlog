@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class RedisPublisher {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, Object> redisChatroomTemplate;
 
     // 채팅
     // publish() 메소드는 외부로부터 ChannelTopic 을 받아와, 해당 채널로 메시지를 발행한다.
@@ -22,8 +22,8 @@ public class RedisPublisher {
         log.info("채팅방 : " + topic.getTopic() + " Message : " + chatMessageDto.getMessage());
 
         // 해당 채널로 메시지를 발행(publish) -> 대기하고 있던 onMessage 가 해당 메세지를 받아 처리
-        redisTemplate.convertAndSend(topic.getTopic(), chatMessageDto);
+        redisChatroomTemplate.convertAndSend(topic.getTopic(), chatMessageDto);
 
-        log.info("redisTemplate : " + redisTemplate);
+        log.info("redisTemplate : " + redisChatroomTemplate);
     }
 }

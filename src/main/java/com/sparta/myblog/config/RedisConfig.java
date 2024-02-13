@@ -4,15 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.sparta.myblog.entity.SseEventName;
+import com.sparta.myblog.redis.pubsub.RedisMessageSubscriber;
 import com.sparta.myblog.redis.pubsub.RedisSubscriber;
 import java.time.Duration;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -25,14 +29,25 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+@Slf4j
 @EnableCaching // 캐싱 기능을 활성화
 @Configuration
-@RequiredArgsConstructor
 public class RedisConfig {
+
 
     private final ObjectMapper objectMapper;
     private final RedisProperties redisProperties;
     private final RedisSubscriber redisSubscriber;
+    private final RedisMessageSubscriber redisMessageSubscriber;
+
+    @Autowired
+    public RedisConfig(ObjectMapper objectMapper, RedisProperties redisProperties, @Lazy RedisSubscriber redisSubscriber,
+        RedisMessageSubscriber redisMessageSubscriber) {
+        this.objectMapper = objectMapper;
+        this.redisProperties = redisProperties;
+        this.redisSubscriber = redisSubscriber;
+        this.redisMessageSubscriber = redisMessageSubscriber;
+    }
 
     @Bean
     public ModelMapper modelMapper() {
@@ -41,24 +56,22 @@ public class RedisConfig {
         return modelMapper;
     }
 
-    /**
-     * LettuceConnectionFactory 를 사용하여 RedisConnectionFactory 빈을 생성하여 반환
-     *
-     * @return RedisConnectionFactory 객체
-     */
+
+/*   * LettuceConnectionFactory 를 사용하여 RedisConnectionFactory 빈을 생성하여 반환
+     * @return RedisConnectionFactory 객체 */
+    // RedisProperties 로 properties 에 저장한 host, post 를 연결
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         return new LettuceConnectionFactory(redisProperties.getHost(), redisProperties.getPort());
     }
 
+/*   * RedisTemplate 빈을 생성하여 반환
+     * @return RedisTemplate 객체 */
     // 메세지를 발송하기 위해서 RedisTemplate 정의
-    /**
-     * RedisTemplate 빈을 생성하여 반환
-     *
-     * @return RedisTemplate 객체
-     */
+    // serializer 설정으로 redis-cli 를 통해 직접 데이터를 조회할 수 있도록 설정
+    // 채팅
     @Bean
-    public RedisTemplate<String, Object> redisTemplate() { // (3) pub
+    public RedisTemplate<String, Object> redisChatroomTemplate() { // (3) pub
         final RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory());
         // 이 메소드를 빼면 실제 스프링에서 조회할 때는 값이 정상으로 보이지만
@@ -74,6 +87,29 @@ public class RedisConfig {
         return redisTemplate;
     }
 
+    @Bean
+    public RedisTemplate<String, Object> redisNotificationTemplate() {
+        // GenericJackson2JsonRedisSerializer 는 시각화 가능한 json 으로 변환해준다.
+        // GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
+
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        // json 형식으로 데이터를 받을 때
+        // 값이 깨지지 않도록 직렬화한다.
+        // 저장할 클래스가 여러 개일 경우 범용 JacksonSerializer 인 GenericJackson2JsonRedisSerializer 를 이용한다.
+        // 참고 https://somoly.tistory.com/134
+        // setKeySerializer, setValueSerializer 설정해주는 이유는 RedisTemplate 를 사용할 때 Spring - Redis 간 데이터 직렬화, 역직렬화 시 사용하는 방식이 Jdk 직렬화 방식이기 때문입니다.
+        // 동작에는 문제가 없지만 redis-cli 을 통해 직접 데이터를 보려고 할 때 알아볼 수 없는 형태로 출력되기 때문에 적용한 설정입니다.
+        // 참고 https://wildeveloperetrain.tistory.com/32
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        // redisTemplate.setValueSerializer(serializer);
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        // redisTemplate.setHashValueSerializer(serializer);
+        redisTemplate.setEnableTransactionSupport(true); // transaction 허용
+
+        return redisTemplate;
+    }
+
     // pub/sub///////////////////////////////////////////////
     // redis 를 경청하고 있다가 메시지 발행(publish)이 오면 Listener 가 처리합니다.
 
@@ -84,13 +120,24 @@ public class RedisConfig {
     // MessageListener 를 생성하는 데 사용
     // receiver 등록 (메시지를 받아 처리하는 로직적인 부분)
     @Bean
-    public RedisMessageListenerContainer redisMessageListenerContainer() {  // (1)sub
+    public RedisMessageListenerContainer redisMessageListenerNotificationContainer() {  // (1)sub
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(redisConnectionFactory());
         // listenerAdapter 를 이용해서 Listener 지정
         // subscribe 할 topic 지정
-        container.addMessageListener(listenerAdapter(), topic());
+        container.addMessageListener(notificationListenerAdapter(), notificationTopic());
+        log.info("Notification PubSubConfig init");
+        return container;
+    }
 
+    @Bean
+    public RedisMessageListenerContainer redisMessageListenerChatroomContainer() {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(redisConnectionFactory());
+        // listenerAdapter 를 이용해서 Listener 지정
+        // subscribe 할 topic 지정
+        container.addMessageListener(chatroomListenerAdapter(), chatroomTopic());
+        log.info("Chatroom PubSubConfig init");
         return container;
     }
 
@@ -98,16 +145,30 @@ public class RedisConfig {
     // MessageListenerAdapter : 스프링에서 비동기 메시지를 지원하는 마지막 컴포넌트
     // 정해진 채널로 들어온 메시지를 처리할 action 을 정의.
     // MessageListenerAdapter 에서 subscriber 설정
+    // pub/sub 은 항상 redis 에 발행 된 데이터가 있는지 확인하고 있어야 하기 떄문에 Listener 를 등록하여야 한다.
+
     @Bean
-    public MessageListenerAdapter listenerAdapter() { // (2)sub
+    public MessageListenerAdapter notificationListenerAdapter() { // (2)sub
+        // delegate – the delegate object
+        // defaultListenerMethod – method to call when a message comes
+        return new MessageListenerAdapter(redisMessageSubscriber, "onMessage");
+    }
+    @Bean
+    public MessageListenerAdapter chatroomListenerAdapter() {
         // delegate – the delegate object
         // defaultListenerMethod – method to call when a message comes
         return new MessageListenerAdapter(redisSubscriber, "onMessage");
     }
 
+
     // channelTopic() : redis 에서 pub/sub 할 채널을 지정해 줌
     @Bean
-    public ChannelTopic topic() { // (4)
+    public ChannelTopic notificationTopic() { // (4)
+        return new ChannelTopic(SseEventName.NOTIFICATION_LIST.getValue());
+    }
+
+    @Bean
+    public ChannelTopic chatroomTopic() {
         return new ChannelTopic("chatroom");
     }
 

@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 public class RedisSubscriber implements MessageListener {
 
     private final ObjectMapper objectMapper;
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate redisChatroomTemplate;
     private final SimpMessageSendingOperations messagingTemplate;
 
     /**
@@ -32,11 +32,11 @@ public class RedisSubscriber implements MessageListener {
     // onMessage() 메서드는 메시지를 구독(subscribe)했을 때 수행할 메서드
     public void onMessage(Message message, byte[] pattern) {
 
-        log.info("Redis Pub/Sub message received: {}", message.toString());
+        log.info("Chatroom Redis Pub/Sub message received: {}", message.toString());
 
         try{
             // redis 에서 발행된 데이터를 받아 deserialize
-            String publishMessage = (String) redisTemplate.getStringSerializer().deserialize(message.getBody());
+            String publishMessage = (String)redisChatroomTemplate.getStringSerializer().deserialize(message.getBody());
 
             // ObjectMapper.readValue 를 사용해서 JSON 을 파싱해서 자바 객체(ChatMessageDto.Class)로 바꿔준다
             ChatMessageDto chatMessageDto = objectMapper.readValue(publishMessage, ChatMessageDto.class);

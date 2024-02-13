@@ -10,10 +10,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class NotificationProducer {
 
-    private final KafkaTemplate<String, NotificationEvent> kafkaTemplate;
+    private final KafkaTemplate<String, NotificationEvent> kafkaNotificationTemplate;
 
     public void send(NotificationEvent notificationEvent) {
-        kafkaTemplate.send("alarm", notificationEvent);
+        kafkaNotificationTemplate.send("alarm", notificationEvent); //(토픽, 생성할 값)
         log.debug("alarm kafka produce");
     }
 }

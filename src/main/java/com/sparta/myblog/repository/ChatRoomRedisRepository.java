@@ -32,13 +32,13 @@ public class ChatRoomRedisRepository {
     // 구독 처리 서비스
     private final RedisSubscriber redisSubscriber;
     // Redis
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, Object> redisChatroomTemplate;
 
     @Resource(name = "redisTemplate")
     private HashOperations<String, String, ChatRoom> opsHashChatRoom;
     // 채팅방(topic)에 발행되는 메시지를 처리할 Listener
     // topic 에 메시지 발행을 기다리는 Listener
-    private final RedisMessageListenerContainer redisMessageListener;
+    private final RedisMessageListenerContainer redisMessageListenerChatroomContainer;
     // topic 이름으로 topic 정보를 가져와 메시지를 발송할 수 있도록 Map 에 저장
     // 채팅방의 대화 메시지를 발행하기 위한 redis topic 정보
     // 서버별로 채팅방에 매치되는 topic 정보를 Map 에 넣어 roomId로 찾을수 있도록 한다.
@@ -46,7 +46,7 @@ public class ChatRoomRedisRepository {
 
     @PostConstruct
     private void init() {
-        opsHashChatRoom = redisTemplate.opsForHash();
+        opsHashChatRoom = redisChatroomTemplate.opsForHash();
         // topic 정보를 담을 Map 을 초기화
         topics = new HashMap<>();
     }
@@ -67,7 +67,7 @@ public class ChatRoomRedisRepository {
     public void createChatRoom(ChatRoom chatRoom) {
 
         // ChatRoom 를 redis 에 저장하기 위하여 직렬화한다.
-        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(ChatRoom.class));
+        redisChatroomTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(ChatRoom.class));
 
         String roomId = chatRoom.getId();
 
@@ -78,7 +78,7 @@ public class ChatRoomRedisRepository {
         // 신규 Topic 을 생성하고 Listener 등록 및 Topic Map 에 저장
         ChannelTopic topic = new ChannelTopic(roomId);
 
-        redisMessageListener.addMessageListener(redisSubscriber, topic);
+        redisMessageListenerChatroomContainer.addMessageListener(redisSubscriber, topic);
 
         topics.put(roomId, topic);
     }
@@ -93,7 +93,7 @@ public class ChatRoomRedisRepository {
         if (topic == null) {
             topic = new ChannelTopic(roomId);
         }
-        redisMessageListener.addMessageListener(redisSubscriber, topic);
+        redisMessageListenerChatroomContainer.addMessageListener(redisSubscriber, topic);
 
         topics.put(roomId, topic);
     }
@@ -122,7 +122,7 @@ public class ChatRoomRedisRepository {
     // Topic 삭제 후 Listener 해제, Topic Map 에서 삭제
     public void deleteRoom(String roomId) {
         ChannelTopic topic = topics.get(roomId);
-        redisMessageListener.removeMessageListener(redisSubscriber, topic);
+        redisMessageListenerChatroomContainer.removeMessageListener(redisSubscriber, topic);
         topics.remove(roomId);
     }
 }
