@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.sparta.myblog.entity.SseEventName;
-import com.sparta.myblog.redis.pubsub.RedisMessageSubscriber;
-import com.sparta.myblog.redis.pubsub.RedisSubscriber;
+import com.sparta.myblog.redis.pubsub.RedisNotificationSubscriber;
+import com.sparta.myblog.redis.pubsub.RedisChatroomSubscriber;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -25,6 +25,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -32,21 +33,24 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Slf4j
 @EnableCaching // 캐싱 기능을 활성화
 @Configuration
+@EnableRedisRepositories // Redis 를 사용하한다고 명시해 주는 애너테이션
 public class RedisConfig {
 
 
     private final ObjectMapper objectMapper;
+    // RedisProperties : Redis 서버와의 연결 정보를 저장하는 객체이다.
+    // redis 의 host 와 port 를 YAML 파일에서 수정할 수 있고 redisProperties.getHost(), redisProperties.getPort() 메서드를 통해 가져올 수 있다.
     private final RedisProperties redisProperties;
-    private final RedisSubscriber redisSubscriber;
-    private final RedisMessageSubscriber redisMessageSubscriber;
+    private final RedisChatroomSubscriber redisChatroomSubscriber;
+    private final RedisNotificationSubscriber redisNotificationSubscriber;
 
     @Autowired
-    public RedisConfig(ObjectMapper objectMapper, RedisProperties redisProperties, @Lazy RedisSubscriber redisSubscriber,
-        RedisMessageSubscriber redisMessageSubscriber) {
+    public RedisConfig(ObjectMapper objectMapper, RedisProperties redisProperties, @Lazy RedisChatroomSubscriber redisChatroomSubscriber,
+        RedisNotificationSubscriber redisNotificationSubscriber) {
         this.objectMapper = objectMapper;
         this.redisProperties = redisProperties;
-        this.redisSubscriber = redisSubscriber;
-        this.redisMessageSubscriber = redisMessageSubscriber;
+        this.redisChatroomSubscriber = redisChatroomSubscriber;
+        this.redisNotificationSubscriber = redisNotificationSubscriber;
     }
 
     @Bean
@@ -60,6 +64,9 @@ public class RedisConfig {
 /*   * LettuceConnectionFactory 를 사용하여 RedisConnectionFactory 빈을 생성하여 반환
      * @return RedisConnectionFactory 객체 */
     // RedisProperties 로 properties 에 저장한 host, post 를 연결
+
+    // redisConnectionFactory() : LettuceConnectionFactory 객체를 생성하여 반환하는 메서드.
+    // 이 객체는 Redis Java 클라이언트 라이브러리인 Lettuce 를 사용해서 Redis 서버와 연결해 준다.
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         return new LettuceConnectionFactory(redisProperties.getHost(), redisProperties.getPort());
@@ -69,6 +76,9 @@ public class RedisConfig {
      * @return RedisTemplate 객체 */
     // 메세지를 발송하기 위해서 RedisTemplate 정의
     // serializer 설정으로 redis-cli 를 통해 직접 데이터를 조회할 수 있도록 설정
+
+    // redisTemplate() : RedisTemplate 객체를 생성하여 반환한다.
+    // RedisTemplate 은 Redis 데이터를 저장하고 조회하는 기능을 하는 클래스이다.
     // 채팅
     @Bean
     public RedisTemplate<String, Object> redisChatroomTemplate() { // (3) pub
@@ -76,6 +86,9 @@ public class RedisConfig {
         redisTemplate.setConnectionFactory(redisConnectionFactory());
         // 이 메소드를 빼면 실제 스프링에서 조회할 때는 값이 정상으로 보이지만
         // redis-cli 로 보면 key 값에 \xac\xed\x00\x05t\x00\x0 이런 값들이 붙는다.
+
+        // setKeySerializer() , setValueSerializer() : Redis 데이터를 직렬화하는 방식을 설정할 수 있다.
+        // Redis CLI를 사용해 Redis 데이터를 직접 조회할 때, Redis 데이터를 문자열로 반화해야하기 때문에 설정한다.
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         // GenericJackson2JsonRedisSerializer
@@ -83,7 +96,6 @@ public class RedisConfig {
         // 여러 객체를 직렬화/역직렬화 사용할 수 있는
         redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
 
-        // redisTemplate.setKeySerializer(new StringRedisSerializer()); //Key: String
         return redisTemplate;
     }
 
@@ -151,13 +163,13 @@ public class RedisConfig {
     public MessageListenerAdapter notificationListenerAdapter() { // (2)sub
         // delegate – the delegate object
         // defaultListenerMethod – method to call when a message comes
-        return new MessageListenerAdapter(redisMessageSubscriber, "onMessage");
+        return new MessageListenerAdapter(redisNotificationSubscriber, "onMessage");
     }
     @Bean
     public MessageListenerAdapter chatroomListenerAdapter() {
         // delegate – the delegate object
         // defaultListenerMethod – method to call when a message comes
-        return new MessageListenerAdapter(redisSubscriber, "onMessage");
+        return new MessageListenerAdapter(redisChatroomSubscriber, "onMessage");
     }
 
 
@@ -175,31 +187,30 @@ public class RedisConfig {
 
     ////cache////////////////////////////////////////////////////
     // Redis Cache 를 사용하기 위한 cache manager 등록
-    // 커스텀 설정을 적용하기 위해 RedisCacheConfiguration 을 먼저 생성한다.
-    // 이후 RedisCacheManager 를 생성할 때 cacheDefaults 의 인자로 configuration 을 주면 해당 설정이 적용된다.
     // RedisCacheConfiguration 설정
-    // disableCachingNullValues - null 값이 캐싱될 수 없도록 설정한다. null 값 캐싱이 시도될 경우 에러를 발생시킨다.
-    // entryTtl - 캐시의 TTL(Time To Live)를 설정한다. Duration class 로 설정할 수 있다.
-    // serializeKeysWith - 캐시 Key 를 직렬화-역직렬화 하는데 사용하는 Pair 를 지정한다.
-    // serializeValuesWith - 캐시 Value 를 직렬화-역직렬화 하는데 사용하는 Pair 를 지정한다. -> 가시성이 중요하지 않기 때문에 JdkSerializationRedisSerializer 사용
-    // Value 는 다양한 자료구조가 올 수 있기 때문에 GenericJackson2JsonRedisSerializer 를 사용한다.
-
     // CacheManager 스프링 빈에 설정된 StringRedisSerializer 와 Jackson2JsonRedisSerializer 로 캐시 키는 문자열로 변경되어 저장되고, 캐시 데이터는 JSON 형식으로 변경되어 저장된다.
     // @param redisConnectionFactory Redis 와의 연결을 담당한다.
     @Bean(name = "cacheManager")
-    public RedisCacheManager redisCacheManager(RedisConnectionFactory cacheConnectionFactory) {
-        GenericJackson2JsonRedisSerializer redisSerializer = getGenericJackson2JsonRedisSerializer();
+    public RedisCacheManager redisCacheManager() {
 
+        GenericJackson2JsonRedisSerializer redisSerializer = getGenericJackson2JsonRedisSerializer();
         // Redis 캐시설정
+        // 커스텀 설정을 적용하기 위해 RedisCacheConfiguration 을 먼저 생성한다.
         RedisCacheConfiguration redisConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+            // serializeKeysWith - 캐시 Key 를 직렬화-역직렬화 하는데 사용하는 Pair 를 지정한다.
             .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+            // serializeValuesWith - 캐시 Value 를 직렬화-역직렬화 하는데 사용하는 Pair 를 지정한다. -> 가시성이 중요하지 않기 때문에 JdkSerializationRedisSerializer 사용
+            // Value 는 다양한 자료구조가 올 수 있기 때문에 GenericJackson2JsonRedisSerializer 를 사용한다.
             .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(redisSerializer))
+            // disableCachingNullValues - null 값이 캐싱될 수 없도록 설정한다. null 값 캐싱이 시도될 경우 에러를 발생시킨다.
             .disableCachingNullValues()
+            // entryTtl - 캐시의 TTL(Time To Live)를 설정한다. Duration class 로 설정할 수 있다.
             .entryTtl(Duration.ofMinutes(10)); // 캐시 지속 시간
 
         // 스프링에서 사용할 CacheManager 빈 생성 (spring-boot-starter-data-redis)
         return RedisCacheManager.RedisCacheManagerBuilder
-            .fromConnectionFactory(cacheConnectionFactory)
+            .fromConnectionFactory(redisConnectionFactory())
+            // RedisCacheManager 를 생성할 때 cacheDefaults 의 인자로 configuration 을 주면 해당 설정이 적용된다.
             .cacheDefaults(redisConfiguration)
             .build();
     }
@@ -215,7 +226,6 @@ public class RedisConfig {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.activateDefaultTyping(typeValidator, ObjectMapper.DefaultTyping.NON_FINAL);
 
-        return new GenericJackson2JsonRedisSerializer(
-            objectMapper);
+        return new GenericJackson2JsonRedisSerializer(objectMapper);
     }
 }

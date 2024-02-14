@@ -54,6 +54,8 @@ public class ChatServiceImpl implements ChatService {
     // 오픈채팅방 채팅 목록 조회
     @Override
     @Transactional(readOnly = true)
+    // key 를 생략하면 `메소드명::파라미터값` 으로 자동 등록 된다.
+    // 하지만 메소드 이름을 리팩토링 하게되면 키도 바뀌게 되기 때문에 가급적 명시하도록 하자.
     @Cacheable(value = "chatListCache", key = "#roomId", cacheManager = "cacheManager")
     public ChatListResponseDto getAllChatByRoomId(String roomId) {
         log.info("이 로그는 해당 key에 대한 캐시가 없는 경우 찍힙니다.");

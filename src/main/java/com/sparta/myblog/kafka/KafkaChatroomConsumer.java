@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ChatConsumer {
+public class KafkaChatroomConsumer {
 
     private final ChatServiceImpl chatService;
 
@@ -20,7 +20,7 @@ public class ChatConsumer {
     // @KafkaListener : topic, groupId, containerFactory 세 개의 값을 통해 '카프카로부터' 값을 가져올 수 있다.
     @KafkaListener(
         topics = "chatroom",
-        groupId = "${spring.kafka.consumer.chat.rdb-group-id}",
+        groupId = "${spring.kafka.consumer.chatroom.rdb-group-id}",
         properties = {AUTO_OFFSET_RESET_CONFIG + ":earliest"},
         containerFactory = "kafkaListenerContainerFactoryChatRDB"
     ) // containerFactory 는 config 파일에서 설정한 bean
@@ -32,7 +32,7 @@ public class ChatConsumer {
     // 메세지 보냄
     @KafkaListener(
         topics = "chatroom",
-        groupId = "${spring.kafka.consumer.chat.redis-group-id}",
+        groupId = "${spring.kafka.consumer.chatroom.redis-group-id}",
         properties = {AUTO_OFFSET_RESET_CONFIG + ":earliest"},
         containerFactory = "kafkaListenerContainerFactoryChatRedis"
     )

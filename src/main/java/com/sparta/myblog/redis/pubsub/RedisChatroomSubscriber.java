@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 // MessageListener 를 구현한 서비스 클래스
 // MessageListener : Callback for processing received objects through Redis.
-public class RedisSubscriber implements MessageListener {
+public class RedisChatroomSubscriber implements MessageListener {
 
     private final ObjectMapper objectMapper;
     private final RedisTemplate redisChatroomTemplate;
@@ -35,6 +35,7 @@ public class RedisSubscriber implements MessageListener {
         log.info("Chatroom Redis Pub/Sub message received: {}", message.toString());
 
         try{
+            // TODO : deserialize
             // redis 에서 발행된 데이터를 받아 deserialize
             String publishMessage = (String)redisChatroomTemplate.getStringSerializer().deserialize(message.getBody());
 

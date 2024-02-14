@@ -17,17 +17,16 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 @Configuration
 public class KafkaProducerConfig {
 
-    @Value("${kafka.bootstrapAddress}")
+    @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
     /**
      * In-Sync-Replica 에 모두 event 가 저장되었음이 확인 되어야 ack 신호를 보냄.
      * 가장 성능은 떨어지지만 event produce 를 보장할 수 있음.
      */
-    @Value("${kafka.producer.acksConfig}")
+    @Value("${spring.kafka.producer.acks}")
     private String acksConfig;
 
-    /*TODO : 알람과 채팅 분리?*/
     private Map<String, Object> producerFactoryConfig() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.ACKS_CONFIG, acksConfig);
@@ -58,7 +57,7 @@ public class KafkaProducerConfig {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
     @Bean
-    public KafkaTemplate<String, ChatMessageDto> kafkaChatTemplate() {// kafka에 데이터를 주고 받기 위한 template을 생성해준다. kafka는 key,value 형식의 저장소임으로 key는 String, value는 ChatDto 를 사용한다.
-        return new KafkaTemplate<>(producerChatFactory());// template을 실질적으로 생성해주는 producerFactory를 넣어준다.
+    public KafkaTemplate<String, ChatMessageDto> kafkaChatTemplate() {// kafka 에 데이터를 주고 받기 위한 template 을 생성해준다. kafka 는 key,value 형식의 저장소이므로 key 는 String, value 는 ChatDto 를 사용한다.
+        return new KafkaTemplate<>(producerChatFactory());// template 을 실질적으로 생성해주는 producerFactory 를 넣어준다.
     }
 }

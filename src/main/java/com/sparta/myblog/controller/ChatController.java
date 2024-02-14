@@ -1,7 +1,7 @@
 package com.sparta.myblog.controller;
 
 import com.sparta.myblog.dto.ChatMessageDto;
-import com.sparta.myblog.kafka.ChatProducer;
+import com.sparta.myblog.kafka.KafkaChatroomProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 @RequestMapping("/api")
 public class ChatController {
-    private  final ChatProducer chatProducer;
+    private  final KafkaChatroomProducer kafkaChatroomProducer;
 
     // stompConfig 에서 설정한 applicationDestinationPrefixes 와 @MessageMapping 경로가 병합됨 (/pub + ...)
     // /pub/chat/message 에 메세지가 오면 동작
@@ -27,7 +27,7 @@ public class ChatController {
     public ChatMessageDto message(@DestinationVariable String roomId, ChatMessageDto messageDto) {
 
         // kafka 에 발행
-        chatProducer.send(messageDto);
+        kafkaChatroomProducer.send(messageDto);
 
         return ChatMessageDto.builder()
             .roomId(roomId)

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class NotificationProducer {
+public class KafkaNotificationProducer {
 
     private final KafkaTemplate<String, NotificationEvent> kafkaNotificationTemplate;
 

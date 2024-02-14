@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class NotificationConsumer {
+public class KafkaNotificationConsumer {
 
     private final NotificationServiceImpl notificationService;
 

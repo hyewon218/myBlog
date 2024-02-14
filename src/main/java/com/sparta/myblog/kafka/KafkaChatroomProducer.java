@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class ChatProducer {
+public class KafkaChatroomProducer {
 
     private final KafkaTemplate<String, ChatMessageDto> kafkaChatTemplate;
 

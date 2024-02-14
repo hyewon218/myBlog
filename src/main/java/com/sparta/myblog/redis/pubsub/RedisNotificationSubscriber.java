@@ -19,7 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class RedisMessageSubscriber implements MessageListener { // 메시지 subscribe(SSE 응답 발송)
+public class RedisNotificationSubscriber implements MessageListener { // 메시지 subscribe(SSE 응답 발송)
     // 모든 WAS 가 메시지를 수신받고 알림을 보내려는 user 와 SSE 연결을 수립하고
     // SseEmitter 객체를 저장하고 있는 WAS 한대가 SSE 응답을 하게 된다.
     private static final String UNDER_SCORE = "_";
@@ -31,7 +31,7 @@ public class RedisMessageSubscriber implements MessageListener { // 메시지 su
     @Override
     public void onMessage(Message message, byte[] pattern) {
 
-        log.info("Redis Pub/Sub message received: {}", message.toString());
+        log.info("Notification Redis Pub/Sub message received: {}", message.toString());
 
         String[] strings = message.toString().split(UNDER_SCORE);
 
