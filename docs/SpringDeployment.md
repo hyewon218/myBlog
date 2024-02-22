@@ -185,6 +185,10 @@ sudo docker pull won1110218/myblog_image
 
 sudo docker run --name spring -d -p 80:80 won1110218/myblog_image:latest
 ```
+- 80:80 nginx 추가 시 변경 어떻게? <br>
+- 프로젝트포트:접속포트
+- 8081:80
+
 docker ps 로 컨테이너를 조회 해봤을 때 만든 이미지가 Up 상태로 나오면 된다.<br>
 ※ 처음에는 Up 상태인데 몇 초 정도 지나면 Exited 상태로 바뀌는 경우가 많다. 여러 번 조회 해보는 게 좋다.
 
@@ -192,7 +196,7 @@ docker ps 로 컨테이너를 조회 해봤을 때 만든 이미지가 Up 상태
 
 ### 8. 배포 확인
 아래 URL로 들어가 페이지가 나오면 성공이다.
-> http:// 퍼블릭 IPv4 주소 : 포트번호
+> http:// 퍼블릭 IPv4 주소 : 포트번호<br>
 > <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/743a9c8d-a8a5-41ff-a625-7c544cdd2eba" width="60%"/><br>
 
 <br>
@@ -247,7 +251,7 @@ spring.datasource.password={RDS 암호}
 사유를 찾아보니 메모리 부족으로 인한 서버 멈춤 현상이었고 `Swap`을 통해 메모리를 할당하여 해결하였다.<br>
 ※ 멈춘 서버를 다시 기동하려면 AWS - EC2 - 인스턴스 상태 - 재부팅하고 기다려주면 된다.
 
-1. 로그 확인
+1. 로그 확인<br>
    메모리 이슈가 아닐 수 도 있으니 로그부터 확인해보는 것이 좋다. 나는 로그에 아무런 문제가없었어서 사유 찾는데 좀 걸렸다.
    - 컨테이너
     ```
@@ -256,48 +260,52 @@ spring.datasource.password={RDS 암호}
    - 인스턴스<br>
      인스턴스 상태 - 모니터링 및 문제 해결 - 시스템 로그 가져오기
 
-2. Swap 이란?
+2. Swap 이란?<br>
    메모리 공간 부족 방지를 위한 임시 방편으로 하드 디스크의 일부를 RAM 처럼 사용할 수 있게 만드는 것이다.<br> 
    리눅스 커널은 실제 메모리에 올라와 있는 메모리 불록 중 당장 사용하지 않는 것을 디스크에 저장하고 이를 통해 사용 가능한 메모리 영역을 늘린다.<br>
    메모리가 부족하던 옛날에 사용하는 방법이라고 하는데 AWS에서 프리티어로 사용중인 서버라 메모리가 넉넉하지 않으니 사용하는 방법이라고 한다.<br>
    *AWS 에 swap 사용 공식 문서가 있다. > [공식 문서]*(https://repost.aws/ko/knowledge-center/ec2-memory-swap-file)
    - 현재 swap 확인
-   ```
+   ```shell
    free -m
    ```
 
 3. 스왑 늘리는 방법
    순서대로 명령어를 입력해주면 된다!<br>
    1. dd 명령을 사용하여 루트 파일 시스템에 스왑 파일을 생성bs = 블록크기*count = 블록 수 = 스왑 파일 크기128MB*32 = 4GB
-   ```
+   ```shell
    sudo dd if=/dev/zero of=/swapfile bs=128M count=32
+   ```
+   or
+   ```shell
+   sudo dd if=/dev/zero of=/swapfile bs=128M count=16
    ```
    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/5ebea11d-d35d-418f-bf02-64a10ddd6f43" width="80%"/><br>
 
    2. 스왑 파일의 읽기 및 쓰기 권한을 업데이트
-   ```
+   ```shell
    sudo chmod 600 /swapfile
    ```
    3.  Linux 스왑 영역을 설정
-   ```
+   ```shell
    sudo mkswap /swapfile
    ```
    4. 스왑 공간에 스왑 파일을 추가 -> 스왑 파일을 즉시 사용
-   ```
+   ```shell
    sudo swapon /swapfile
    ```
    5. 프로시저가 성공적인지 확인
-   ```
+   ```shell
    sudo swapon -s
    ```
    6. /etc/fstab 파일을 편집하여 부팅 시 스왑 파일을 시작
-   ```
+   ```shell
    sudo vi /etc/fstab
    ```
    <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/f6cd0e03-8d09-411a-8b7d-7fe00e5f63ca" width="80%"/><br>
 
    7. 파일 끝에 다음 줄을 새로 추가하고 파일을 저장한 다음 종료
-   ```
+   ```shell
    /swapfile swap swap defaults 0 0
    ```
    8. 7번까지 진행하고`free -m`명령어를 입력해주면 0 이었던 스왑 메모리에 값이 할당 된 것을 볼 수 있다.
@@ -311,6 +319,22 @@ spring.datasource.password={RDS 암호}
 docker start {컨테이너명}
 ```
 상태가 up 으로 유지되면 해결!
+
+---
+📌 **반대로 스왑 파티션을 제거하는 방법**
+1. . 할당된 스왑공간을 제거한다.
+```shell
+sudo swapoff /swapfile
+```
+2. swapfile을 제거한다.
+```shell
+sudo rm -rf /swapfile
+```
+3. 부팅시, 스왑 파일을 활성화하도록 설정한 것을 지운다.
+```shell
+sudo vim /etc/fstab
+```
+> /swapfile swap swap defaults 0 0 # 내용을 지운다.
 
 ## 프로필 설정
 프로젝트를 실행하기 전에 로컬 개발 환경과 배포 환경을 구분해줘야 한다.<br> 
