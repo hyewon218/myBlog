@@ -14,4 +14,4 @@
 10. [Spring 프로젝트 Docker로 배포 정리](https://github.com/hyewon218/myBlog/blob/master/docs/SpringDeployment.md)
 11. [AWS 정리](https://github.com/hyewon218/myBlog/blob/master/docs/AWS.md)
 12. [RDS 연결 정리](https://github.com/hyewon218/myBlog/blob/master/docs/RDS.md)
-13. [Nginx 정리](https://github.com/hyewon218/myBlog/blob/master/docs/Nginx.md)
+13. [NginX 정리](https://github.com/hyewon218/myBlog/blob/master/docs/NginX.md)
