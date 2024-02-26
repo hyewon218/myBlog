@@ -1,23 +1,149 @@
 # AWS
+## VPD 
+- virtual private cloud의 약자로 AWS서비스 사용할 내에서 private network를 의미한다고 생각하면 된다.
+- 보통 Default VPC가 존재하는데 이걸 그대로 사용하는 것 보다는 Custom하여 활용하는 것이 좋다.
 
-### 서브넷(Subent) : 보안, 통신 성능 향상 등을 목적으로 VPC를 잘개 쪼갠 단위
+### VPC 생성
+- Name tag를 원하는 이름으로 설정해준다.
+- CIDR Block은 VPC내에서 사용할 **private IP 범위**라고 볼 수 있다.
+- `10.0.0.0/16`으로 설정하였다.
+- IPv6는 사용하지 않는것으로 설정한다.
+- Tenancy는 VPC내부에서 사용할 Instance들을 부여 받을 때 따로 격리시킨것을 받을지 공유되는것을 받을지 여부이다.<br> 
+격리시키면 비용이 매우 비싸기 때문에 Default로 설정해준다.
 
--> Public과 Private으로 나뉨
+<br>
 
-Public Subnet은 외부에서 접근이 가능한 네트워크 영역입니다.<br>
-Private Subnet은 외부에서 접근이 불가능합니다. 내부에서 외부로만 접근이 가능하면,<br> 
-그것 또한 NAT 게이트웨이를 이용하여 가능합니다. 중요한 리소스들을 엄격하게 관리하기 위해 사용합니다.
+## VPC Subnet
+### 서브넷(Subnet) : 보안, 통신 성능 향상 등을 목적으로 VPC를 잘개 쪼갠 단위
+- VPC Subnet이란 VPC Network를 분할하여 정의하는 개념으로 생각할 수 있다.
+- Public Subnet, Private Subnet, DB Subnet등으로 분리하여 각 Subnet 성격에 맞게 설정해 줄 수 있으며<br> 
+VPC CIDR Block 범위내에서 Subnet의 CIDR Block을 설정하여 private IP 주소범위를 지정해 줄 수 있다.
 
-우리는 EC2 인스턴스를 만들고 사용하면서 '보안 그룹'이라는 것을 한 번쯤 본 적이 있을 것입니다.
-해당 인스턴스에 인/아웃바운드로 접근할 수 있는 규격을 정의한 것인데요,
+### VPC Subnet 생성
+- Subnet의 종류는 **Private Subnet**과 **Public Subnet**으로 구분할 것이며 Availability zone 3곳에 각각 하나씩 분포하도록 구성한다.
+- **Private Subnet**은 주소가 더 많이 필요하기 때문에 Netmask 크기를 20으로 하고 Public Subnet의 경우 24로 한다.
+- 각각의 Subnet의 CIDR Block이 겹치지 않도록 주의한다.<br>
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/662e06a4-19b5-4e80-a311-0121460c2926" width="100%"/><br>
+- Public Subnet의 경우 Subnet Settings에서
+  - Enable auto-assign public IPv4 address 를 체크해준다.
+  - 해당 옵션을 활성화 할 경우 **EC2 생성시 public ip 할당하는 것을 Default로 설정**할 수 있게 된다.
 
-서브넷에도 해당 서브넷에 접근하기 위해 거쳐야 하는 관문인 '네트워크 ACL'이 있습니다.
-하지만 여기서는 자세히 다루지 않겠습니다.
+<br>
 
-개념은 이쯤 알아두고,
-우리가 구축하려는 시스템을 그림을 통해 알아봅시다.
+##  IGW(Internet Gateway) & Route Tables
+### IGW
+- IGW는 VPC내의 Instance가 외부 인터넷과 통신할 수 있도록 하며 VPC 하나 당 하나만 설정할 수 있다.
+- Public IP가 있더라도 IGW가 없다면 외부에서 접근할 수 없다.
+- 수평적 확장 및 가용성이 뛰어나다.
+- IGW 생성 이후에 추가적으로 Route tables에 IGW로 라우팅을 설정해야 한다.
+- 
+### Route Tables
+- Route table이란 특정 Subnet을 대상으로 특정 ip주소로 통신이 지정된 경우 **route 규칙을 지정하는 table**이다.
+
+### IGW 생성 및 Public Route table 설정
+#### IGW
+- IGW를 생성한다.
+- 생성했던 VPC에 IGW를 attach한다.
+
+#### Route table
+- Public Subnet route table생성한다.
+- Public Subnet route table의 Subnet associations에 Public Subnet을 추가해준다.
+- route table 생성후에 route 규칙을 보면 다음과 같은 규칙이 자동적으로 추가 되어있음을 확인할 수 있다.
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/9f8f37b2-fdf5-4518-a099-373fd88a2fdb" width="100%"/><br>
+- 이 규칙은 VPC 내에 사설 ip주소의 경우 **local로 route**시키는 조건이다.
+- 외부 인터넷으로 route 시키는 규칙을 추가해 주어야 한다.
+- 규칙은 먼저 쓰인 것이 우선순위가 더 높으므로 뒤에 규칙을 지정해야 한다.
+- **Public** Route table의 경우 `0.0.0.0` 의 **모든 ip트래픽을 IGW로 route**하는 규칙을 추가한다.
+
+<br>
+
+## Private Subnet (Bastion Host & Nat Gateway)
+- Private Subnet의 경우 public Ip가 없기 때문에 기본적으로 외부와 통신이 불가능하고 특수한 경로를 통해서만 가능하도록 설정한다.
+
+### Bastion Host
+- Bastion Host는 public Subnet에 있는 EC2 Instance이므로 private Subnet에 있는 EC2, RDS, ElastiCache, MSK등에 접속 가능하다.
+- Bastion Host의 보안이 뚫릴 경우 매우 위험할 수 있기 때문에 Security Group의 경우 집이나 회사와 같은 특정 IP를 SSH(22)에 대해서만 추가하는 것이 보안상 유리하다.
+
+### Nat Gateway
+- Nat Gateway는 **public IP가 없는 Instance**가 인터넷에 요청을 보낼 수 있게 해준다.
+- IGW의 경우는 **public IP가 있는 경우**에 인터넷에 요청을 보낼 수 있다.
+- **Private Subnet의 EC2 Instance**의 경우에 외부로 요청을 보내야하는 경우(외부 API호출이나 메일 발송)가 있기 때문에 route 설정을 해주어야 한다.
+- Nat gateway의 경우 다른 Instance들과 마찬가지로 가용성을 위해 **적어도 둘 이상의 Availability zone에 위치**해야 한다.
+- BandWidth 등을 스스로 조절하기 때문에 가용성이 높다.
+
+### Nat Gateway 설정 과정
+- 적어도 두개의 Availability Zone의 **public subnet 각각에 Nat Gateway를 하나씩 생성**한다. (이 글에서는 PublicSubnetA, PublicSubnetC)
+- Connectivity type을 `public`으로 설정한다.
+  - Create Elastic IP하여 새로 eip를 생성해준다.
+- **PrivateRouteTable** 또한 Nat Gateway개수만큼 생성하고 subnet associations에서 Availability zone에 속한 private subnet을 지정해준다.<br>
+(어차피 availability zone fail시 instance들도 fail하기 때문에 cross-zone 하지 않아도 됨.)
+- route에서 0.0.0.0 이 Nat Gateway로 가도록 설정해주는데 각각 다른 Nat Gateway로 설정해 준다.
+- 3개의 RouteTable이 생성됨을 확인할 수 있다.<br>
+  <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/2f74af9a-a2b4-4c14-8c29-d1b3d30550bc" width="30%"/><br>
 
 <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/3940fab0-1d44-4d1f-97b7-15b72e84fe7e" width="60%"/><br>
+
+
+<br>
+
+## Elastic Load Balancer
+- Local balancer란 Backend System의 전면에 위치하면서 사용자 요청을 받아들이고 여러 instance에게 요청을 분배해주는 역할을 하는 컴포넌트이다.
+- DNS를 지정하여 **domain name을 지정**할 수 있고 **HTTPS SSL Termination**을 대리수행할 수 있다.
+- public에 위치하면서 Private Subnet에 위치한 Instance에게 요청을 전달 할 수 있다.
+- AWS에는 CLB, NLB, ALB, GWLB등의 종류가 있으며 이글에서는 **ALB(Application Load Balancer)** 를 사용한다.
+
+### Load Balancing Algorithm
+- Round Robin: Instance 들에게 돌아가면서 요청을 할당한다.
+  - 가중 Round Robin: 가중치에 따라 Instance에게 요청을 할당한다.
+- Hash: 요청 내의 IP, Request Uri의 Hash 값을 구해서 Instance를 대응해 준다.
+- Least Connection: 현재 연결이 가장 적은 Instance에 대응해 준다.
+- Least Response Time: 응답 시간이 가장 적은것으로 통계적으로 판단되는 Instance에 대응해 준다.
+
+### Health Check
+- 특정 uri, port를 지정하여 Health Check를 하도록 설정하면 연결된 Instance들이 정상적으로 동작하는지를<br> 
+설정된 요청지에서 200(OK)응답이 오는지 보고 확인할 수 있다.
+- Health Check간격이나 몇번 연속해서 잘못된 응답이 올 경우에 문제가 있는 EC2로 판단할 것인지를 정할 수 있고<br> 
+문제가 있는것으로 판단 된 경우 load balancer가 요청을 제공해주지 않는다.
+
+### L4 vs L7 Load balancer
+- L4 즉 Transport layer 혹은 L7 Application layer까지의 정보를 바탕으로 balancing을 수행한다.
+- 여기서 생기는 가장 큰 차이점은 L7의 경우 Https 프로토콜에 의한 복호화 과정을 수행할 수 있고 또 해야만 한다는 점이다.
+  - 이에 따른 장점은 SSLTermination을 수행할 수 있고 이후의 흐름에서 Http만으로 통신할 수 있도록 할 수 있다.
+  - 또한, Http 요청 내용을 활용할 수 있기 때문에 이를 바탕으로 request uri, cookie등의 정보도 활용하여 Load Balancing을 진행할 수 있다.
+  - 단점은 복호화라는 것 자체에서 overhead가 발생한다는 점이다.
+  - L4의 경우 패킷을 복호화 하지않고 IP, Port, Mac Address 정보만으로도 충분히 활용 가능하기 때문에 복호화에 의한 overhead가 발생하지 않는다.
+  - AWS에서 NLB(L4)의 Latency 는 ~100ms정도인 반면에 ALB(L7)의 Latency는 ~400ms로 알려져있다.
+
+### AWS ELB 설정 과정
+#### 설정 시 주요 결정 사항들
+- L4 vs L7
+  - L7인 Application Load Balancer를 활용하는 것이 적합하다고 판단하였다.
+    - 이유는 NLB를 선택하여 Https 복호화를 수행하지 않아 성능 향상이 부분적으로 이루어 질 수 있다 하더라도 어차피<br> 
+    이 이후의 서버단 어딘가에서 SSL Termination이 이루어져야 하기 때문이다.
+    - 기존 배포의 경우 EC2내의 Reverse Proxy인 Nginx에서 이 역할을 수행하고 있었는데 ALB를 선택할 경우<br>
+    Nginx가 이 역할을 수행하지 않아도 되기 때문에 여러 Instance에서 중복된 로직을 Application Load Balancer에서 응집해서 수행할 수 있다는 장점이 있다.
+
+#### 설정 과정
+- ALB 생성 선택
+  - Internet Facing
+  - Security Group 생성
+    - Inbound Rule에서 프론트엔드 서버에 대해서만 허용한다.
+    - SSH 접속은 Bastion Host를 통해 이루어지기 때문에 허용할 필요가 없다.
+  - subnet의 경우 Public subnet을 둘 이상을 선택한다.
+    - Subnet은 ALB가 위치할 곳을 의미하므로 꼭 **IGW가 Routing이 되어있는 Public Subnet으로 설정**해야한다.
+    - Target Group의 Instance가 위치해 있는 Availability 존에 적어도 하나 존재해야 해당 Instance에 접근할 수 있다.
+
+  - Listener-target group 생성
+    - Listner의 프로토콜과 포트는 Load Balancer로 들어오는 요청을 의미하며 이 요청을 target group으로 어떻게 전달해줄지를 의미한다.
+      - HTTPS 프로토콜을 사용할 것이기 때문에 HTTPS 443으로 선택한다.
+      - Target Group을 선택하고 Action에서 Forward를 선택한다. 해당 Instance의 프로토콜은 SSL Termination을 이미진행했으므로 Http를 선택한다.
+      - 추후에 ASG를 생성하여 target group으로 설정할 것이다.
+
+#### DNS + HTTPS (AWS Certificate Manager + Route 53)
+- Route 53을 통해 도메인을 발급받는다.(1년에 13달러 요금 발생)
+- 생성된 Hosted Zone에서 Record를 생성하고 A record, Alias를 선택한 후 Load balancer를 선택하여 도메인 주소를 발급해준다.
+- ACM에서 해당 도메인 주소에 SSL 인증서를 request하고 인증 과정을 거치면 HTTPS 구축까지 완료된다.
+
 
 ---
 ## Route53
