@@ -1,6 +1,6 @@
 # myBlog
 
-<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/fc03aa8e-12ff-4c84-907a-fed8b577a0c8" width="90%"/><br>
+<img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/5147bedf-6550-4017-a7c3-627946fb43cf" width="90%"/><br>
 
 1. [Stomp 정리](https://github.com/hyewon218/myBlog/blob/master/docs/Stomp.md)
 2. [Stomp JWT 정리](https://github.com/hyewon218/myBlog/blob/master/docs/StompJWT.md)
