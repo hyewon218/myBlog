@@ -31,9 +31,26 @@ AWS EC2 서버와 local에 docker를 설치하고 **local에서 프로젝트 jar
 
 ### 1. EC2 Ubuntu 인스턴스 생성
 
+
+### 2. EC2 Ubuntu 서버에 JDK 설치
+root 계정으로
+```shell
+sudo su
+```
+Spring Boot는 3.x.x 버전을 사용할 예정이고, JDK는 17버전을 사용할 예정이다. 그에 맞게 환경을 설치해보자.
+```shell
+$ sudo apt update && /
+sudo apt install openjdk-17-jdk -y
+```
+
+### ✅ 3. 잘 설치됐는지 확인하기
+```shell
+$ java -version
+```
+
 <br>
 
-### 2. EC2 Ubuntu서버에 docker 설치하기
+### 4. EC2 Ubuntu 서버에 docker 설치
 1. EC2 서버 접속
 ```shell
 ubuntu@ip-xx-x-x-x:~$
@@ -66,7 +83,7 @@ docker --version
 
 
 
-### 3. 설정 파일 추가(Dockerfile,build.gradle)
+### 5. 설정 파일 추가(Dockerfile,build.gradle)
 프로젝트 폴더 안에 `Dockerfile` 파일 생성<br>
 (* 대소문자까지 동일해야 하고 확장자는 없이 만든다.)
 
@@ -105,7 +122,7 @@ jar {
 
 <br>
 
-### 4. jar 파일 생성
+### 6. jar 파일 생성
 #### CMD에서 프로젝트 폴더로 위치를 이동하고 빌드하여 jar 파일을 생성한다.<br>
 IDE의 힘을 빌릴 수 없는 경우가 발생할 수 있다 (배포 서버 내부에서 작업해야 하는경우)
 
@@ -137,14 +154,14 @@ chmod +x gradlew
 
 <br>
 
-### 5. docker hub 회원가입& local에서 로그인
+### 7. docker hub 회원가입& local에서 로그인
 
 #### local 로그인
 CMD에서 'docker login -u {ID}' 를 입력하면 Password를 입력할 수 있다.<br> 
 둘 다 맞게 입력해주면 내 docker hub에 작업이 가능하다.<br>
 (* ID 또는 로그인 ID(이메일)을 입력해주면 된다.)
 
-### 6. jar 파일을 이미지로 생성 & 만든 이미지를 docker hub에 push
+### 8. jar 파일을 이미지로 생성 & 만든 이미지를 docker hub에 push
 #### OS에 맞게 도커 이미지 빌드 & 푸시
 ```
 # docker build -t {ID} / {이미지명}:{태그} {DockerFile 위치}
@@ -164,7 +181,7 @@ Tag => `1.0`<br>
 
 <br>
 
-### 7. EC2 서버에서 다운로드
+### 9. EC2 서버에서 다운로드
 
 이제 docker hub에 있는 이미지를 서버에 받아오기만 하면 된다.<br>
 다만, 지금까지 오류 없던 이미지가 다운로드 후에 오류가 나는 경우에 많으니 local에 한 번 다운로드 & 실행해보고 하는 것이 좋다.
@@ -183,7 +200,7 @@ sudo docker pull won1110218/myblog_image
 # 포트 : 80 (뒤에 있는 포트 사용)
 # 이미지명 : won1110218/myblog_image:1.0
 
-sudo docker run --name spring -d -p 80:80 won1110218/myblog_image:latest
+sudo docker run --name spring -d -p 8081:80 won1110218/myblog_image:latest
 ```
 - 80:80 nginx 추가 시 변경 어떻게? <br>
 - 프로젝트포트:접속포트
@@ -194,7 +211,7 @@ docker ps 로 컨테이너를 조회 해봤을 때 만든 이미지가 Up 상태
 
 <br>
 
-### 8. 배포 확인
+### 10. 배포 확인
 아래 URL로 들어가 페이지가 나오면 성공이다.
 > http:// 퍼블릭 IPv4 주소 : 포트번호<br>
 > <img src="https://github.com/hyewon218/kim-jpa2/assets/126750615/743a9c8d-a8a5-41ff-a625-7c544cdd2eba" width="60%"/><br>
@@ -225,7 +242,7 @@ spring.datasource.password=${PASSWORD}
 # -e : 옵션 설정, 건 마다 적어줘야 한다.
 # -e {환경변수 이름}={적용되는 값}
 
-sudo docker run --name spring -d -p 80:80 -e NAME=admin -e PASSWORD=pwd test/test_image:latest
+sudo docker run --name spring -d -p 8081:80 -e NAME=admin -e PASSWORD=pwd test/test_image:latest
 ```
 
 이렇게 하면 보안이 중요한 데이터들이 이미지가 올리지 않고 컨테이너를 만들 수 있다.
@@ -370,7 +387,7 @@ application.yml와 같은 민감한 정보가 포함된 파일은 Git으로 버�
 #### src/main/resources/application.yml
 ```
 server:
-  port: 80
+  port: 8081
 ```
 
 ### ✅ 5. 서버 실행시키기
